@@ -1,19 +1,13 @@
 ﻿using System;
-using System.Data;
 using System.Windows.Forms;
 
-namespace QLDSV_HTC
-{
-    public partial class frmLogin : Form
-    {
-        public frmLogin()
-        {
+namespace QLDSV_HTC {
+    public partial class frmLogin : Form {
+        public frmLogin() {
             InitializeComponent();
-            LoadComboKhoa();
         }
 
-        private void InitializeComponent()
-        {
+        private void InitializeComponent() {
             this.cboRole = new System.Windows.Forms.ComboBox();
             this.txtPassword = new System.Windows.Forms.TextBox();
             this.cboKhoa = new System.Windows.Forms.ComboBox();
@@ -23,14 +17,14 @@ namespace QLDSV_HTC
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.SuspendLayout();
-          
+
             // label1
             this.label1.AutoSize = true;
             this.label1.Location = new System.Drawing.Point(30, 30);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(100, 17);
             this.label1.Text = "Vai trò:";
-            
+
             // cboRole
             this.cboRole.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cboRole.FormattingEnabled = true;
@@ -50,6 +44,7 @@ namespace QLDSV_HTC
             // cboKhoa
             this.cboKhoa.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cboKhoa.FormattingEnabled = true;
+            this.cboKhoa.Items.AddRange(new object[] { "CNTT - Công nghệ thông tin", "VT - Viễn thông" });
             this.cboKhoa.Location = new System.Drawing.Point(150, 67);
             this.cboKhoa.Name = "cboKhoa";
             this.cboKhoa.Size = new System.Drawing.Size(200, 24);
@@ -111,32 +106,20 @@ namespace QLDSV_HTC
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label3;
 
-        private void LoadComboKhoa()
-        {
-            cboKhoa.Items.Add("CNTT - Công nghệ thông tin");
-            cboKhoa.Items.Add("VT - Viễn thông");
-            cboKhoa.SelectedIndex = 0; 
-        }
-
-        private void cboRole_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            // Only "KHOA" role could select, either couldn't
-            if (cboRole.SelectedItem != null)
-            {
+        private void cboRole_SelectedIndexChanged(object sender, EventArgs e) {
+            // Only "KHOA" and "SV" role could select, either couldn't
+            if (cboRole.SelectedItem != null) {
                 string role = cboRole.SelectedItem.ToString();
-                cboKhoa.Enabled = (role == "KHOA");
+                cboKhoa.Enabled = role == "KHOA" || role == "SV";
 
-                if (role == "PGV" || role == "PKT" || role == "SV")
-                {
+                if (role == "PGV" || role == "PKT") {
                     cboKhoa.Enabled = false;
                 }
             }
         }
 
-        private void btnLogin_Click(object sender, EventArgs e)
-        {
-            if (cboRole.SelectedItem == null)
-            {
+        private void btnLogin_Click(object sender, EventArgs e) {
+            if (cboRole.SelectedItem == null) {
                 MessageBox.Show("Vui lòng chọn vai trò!", "Thông báo",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 cboRole.Focus();
@@ -145,8 +128,7 @@ namespace QLDSV_HTC
 
             string role = cboRole.SelectedItem.ToString();
 
-            if ((role == "KHOA") && cboKhoa.SelectedItem == null)
-            {
+            if ((role == "KHOA") && cboKhoa.SelectedItem == null) {
                 MessageBox.Show("Vui lòng chọn khoa!", "Thông báo",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 cboKhoa.Focus();
@@ -156,8 +138,7 @@ namespace QLDSV_HTC
             // Save login information
             DatabaseConnection.UserRole = role;
 
-            if ((role == "KHOA") && cboKhoa.SelectedItem != null)
-            {
+            if ((role == "KHOA") && cboKhoa.SelectedItem != null) {
                 // Get khoaText and padding 10 character (similar to database)
                 string khoaText = cboKhoa.SelectedItem.ToString();
                 string maKhoa = khoaText.StartsWith("CNTT") ? "CNTT" : "VT";
@@ -171,8 +152,7 @@ namespace QLDSV_HTC
             this.Close();
         }
 
-        private void btnExit_Click(object sender, EventArgs e)
-        {
+        private void btnExit_Click(object sender, EventArgs e) {
             Application.Exit();
         }
     }
