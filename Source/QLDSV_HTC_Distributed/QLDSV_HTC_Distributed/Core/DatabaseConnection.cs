@@ -1,172 +1,223 @@
 ﻿using System;
+using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
 using System.Windows.Forms;
 
-namespace QLDSV_HTC
-{
-    public class DatabaseConnection
-    {
-        // ==========================================
-        // CẤU HÌNH CONNECTION STRING
-        // ==========================================
-        // Đối với 1 SQL Server: Chỉ khác Initial Catalog
-        // Đối với nhiều SQL Server: Thay Data Source khác nhau
+namespace QLDSV_HTC {
+    /// <summary>
+    /// Lớp tiện ích kết nối cho mô hình phân tán 4 site: PGV / CNTT / VT / HOCPHI.
+    /// - Đọc connection string từ App.config: PGV, CNTT, VT, HOCPHI.
+    /// - Route theo CurrentKhoa hoặc tham số site truyền vào.
+    /// </summary>
+    public static class DatabaseConnection {
+        // ========= Thông tin phiên đăng nhập (để frmMain/frmLogin dùng) =========
+        public static string UserRole = "";     // Assign after login
+        public static string CurrentKhoa = "";  // Assign after login
 
-        // Cấu hình cho 1 SQL Server (khuyến nghị cho học tập)
-        public static string ConnStr_CNTT = @"Data Source=localhost;Initial Catalog=QLDSV_HTC_CNTT;Integrated Security=True";
-        public static string ConnStr_VT = @"Data Source=localhost;Initial Catalog=QLDSV_HTC_VT;Integrated Security=True";
-        public static string ConnStr_HocPhi = @"Data Source=localhost;Initial Catalog=QLDSV_HTC_HOCPHI;Integrated Security=True";
+        // ========= Cấu hình mặc định =========
+        public static int CommandTimeoutSeconds = 30;
 
-        // Nếu dùng SQL Authentication, dùng format này:
-        // public static string ConnStr_CNTT = @"Data Source=localhost;Initial Catalog=QLDSV_HTC_CNTT;User ID=sa;Password=123456";
-
-        // Nếu có 3 SQL Server khác nhau:
-        // public static string ConnStr_CNTT = @"Data Source=192.168.1.100;Initial Catalog=QLDSV_HTC_CNTT;User ID=sa;Password=123456";
-        // public static string ConnStr_VT = @"Data Source=192.168.1.101;Initial Catalog=QLDSV_HTC_VT;User ID=sa;Password=123456";
-        // public static string ConnStr_HocPhi = @"Data Source=192.168.1.102;Initial Catalog=QLDSV_HTC_HOCPHI;User ID=sa;Password=123456";
-
-        public static string CurrentKhoa = "CNTT      "; // Mặc định - Chú ý: Padded với space để = 10 ký tự
-        public static string UserRole = ""; // PGV, KHOA, SV, PKT
-        public static string UserMaKhoa = "";
-
-        // Lấy connection string theo khoa
-        public static string GetConnectionString(string maKhoa = null)
-        {
-            string khoa = maKhoa ?? CurrentKhoa;
-            if (khoa == "CNTT")
-                return ConnStr_CNTT;
-            else if (khoa == "VT")
-                return ConnStr_VT;
-            else
-                return ConnStr_CNTT;
+        // ========= Lấy chuỗi kết nối theo site =========
+        private static string GetCsByName(string name) {
+            var cs = ConfigurationManager.ConnectionStrings[name];
+            return cs != null ? cs.ConnectionString : "";
         }
 
-        // Thực thi query trả về DataTable
-        public static DataTable ExecuteQuery(string query, SqlParameter[] parameters = null, string maKhoa = null)
-        {
-            DataTable dt = new DataTable();
-            try
-            {
-                using (SqlConnection conn = new SqlConnection(GetConnectionString(maKhoa)))
-                {
-                    conn.Open();
-                    using (SqlCommand cmd = new SqlCommand(query, conn))
-                    {
-                        if (parameters != null)
-                            cmd.Parameters.AddRange(parameters);
-
-                        using (SqlDataAdapter adapter = new SqlDataAdapter(cmd))
-                        {
-                            adapter.Fill(dt);
-                        }
-                    }
-                }
+        /// <summary>
+        /// Trả về connection string theo site.
+        /// Ưu tiên tham số maKhoa; nếu null -> CurrentKhoa.
+        /// </summary>
+        public static string GetConnectionString(string maKhoa = null) {
+            var site = (maKhoa ?? CurrentKhoa ?? "").Trim().ToUpperInvariant();
+            var role = UserRole.Trim().ToUpperInvariant();
+            switch (role) {
+                case "PGV":
+                    return GetCsByName("PGV");
+                case "PKT":
+                    return GetCsByName("HOCPHI");
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Lỗi: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+            switch (site) {
+                case "CNTT":
+                    return GetCsByName("CNTT");
+                case "VT":
+                    return GetCsByName("VT");
+                default:
+                    MessageBox.Show(
+                        "Không thể lấy ConnectionString",
+                        "Thông báo",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning
+                    );
+                    return "";
+            }
+        }
+
+        // ========= Helpers ADO.NET thường dùng =========
+
+        /// <summary>
+        /// SELECT trả về DataTable. Route theo maKhoa/CurrentKhoa.
+        /// </summary>
+        public static DataTable ExecuteQuery(string sql, SqlParameter[] parameters = null, string maKhoa = null) {
+            var dt = new DataTable();
+            var cs = GetConnectionString(maKhoa);
+
+            try {
+                using (var conn = new SqlConnection(cs))
+                using (var cmd = new SqlCommand(sql, conn))
+                using (var da = new SqlDataAdapter(cmd)) {
+                    cmd.CommandTimeout = CommandTimeoutSeconds;
+                    if (parameters != null)
+                        cmd.Parameters.AddRange(parameters);
+
+                    conn.Open();
+                    da.Fill(dt);
+                }
+            } catch (Exception ex) {
+                MessageBox.Show("Lỗi ExecuteQuery: " + ex.Message, "DB Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             return dt;
         }
 
-        // Thực thi query không trả về kết quả (INSERT, UPDATE, DELETE)
-        public static bool ExecuteNonQuery(string query, SqlParameter[] parameters = null, string maKhoa = null)
-        {
-            try
-            {
-                using (SqlConnection conn = new SqlConnection(GetConnectionString(maKhoa)))
-                {
-                    conn.Open();
-                    using (SqlCommand cmd = new SqlCommand(query, conn))
-                    {
-                        if (parameters != null)
-                            cmd.Parameters.AddRange(parameters);
+        /// <summary>
+        /// INSERT/UPDATE/DELETE (không trả dữ liệu). Route theo maKhoa/CurrentKhoa.
+        /// </summary>
+        public static bool ExecuteNonQuery(string sql, SqlParameter[] parameters = null, string maKhoa = null) {
+            var cs = GetConnectionString(maKhoa);
 
-                        cmd.ExecuteNonQuery();
-                        return true;
-                    }
+            try {
+                using (var conn = new SqlConnection(cs))
+                using (var cmd = new SqlCommand(sql, conn)) {
+                    cmd.CommandTimeout = CommandTimeoutSeconds;
+                    if (parameters != null)
+                        cmd.Parameters.AddRange(parameters);
+
+                    conn.Open();
+                    cmd.ExecuteNonQuery();
+                    return true;
                 }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Lỗi: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            } catch (Exception ex) {
+                MessageBox.Show("Lỗi ExecuteNonQuery: " + ex.Message, "DB Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
         }
 
-        // Thực thi stored procedure
-        public static DataTable ExecuteStoredProcedure(string spName, SqlParameter[] parameters = null, string maKhoa = null)
-        {
-            DataTable dt = new DataTable();
-            try
-            {
-                using (SqlConnection conn = new SqlConnection(GetConnectionString(maKhoa)))
-                {
-                    conn.Open();
-                    using (SqlCommand cmd = new SqlCommand(spName, conn))
-                    {
-                        cmd.CommandType = CommandType.StoredProcedure;
-                        if (parameters != null)
-                            cmd.Parameters.AddRange(parameters);
+        /// <summary>
+        /// Gọi Stored Procedure, trả về DataTable. Route theo maKhoa/CurrentKhoa.
+        /// </summary>
+        public static DataTable ExecuteStoredProcedure(string spName, SqlParameter[] parameters = null, string maKhoa = null) {
+            var dt = new DataTable();
+            var cs = GetConnectionString(maKhoa);
 
-                        using (SqlDataAdapter adapter = new SqlDataAdapter(cmd))
-                        {
-                            adapter.Fill(dt);
-                        }
-                    }
+            try {
+                using (var conn = new SqlConnection(cs))
+                using (var cmd = new SqlCommand(spName, conn))
+                using (var da = new SqlDataAdapter(cmd)) {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.CommandTimeout = CommandTimeoutSeconds;
+                    if (parameters != null)
+                        cmd.Parameters.AddRange(parameters);
+
+                    conn.Open();
+                    da.Fill(dt);
                 }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Lỗi: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            } catch (Exception ex) {
+                MessageBox.Show("Lỗi ExecuteStoredProcedure: " + ex.Message, "DB Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             return dt;
         }
 
-        // Thực thi stored procedure cho học phí
-        public static DataTable ExecuteStoredProcedureHocPhi(string spName, SqlParameter[] parameters = null)
-        {
-            DataTable dt = new DataTable();
-            try
-            {
-                using (SqlConnection conn = new SqlConnection(ConnStr_HocPhi))
-                {
-                    conn.Open();
-                    using (SqlCommand cmd = new SqlCommand(spName, conn))
-                    {
-                        cmd.CommandType = CommandType.StoredProcedure;
-                        if (parameters != null)
-                            cmd.Parameters.AddRange(parameters);
+        /// <summary>
+        /// Gọi SP về site Học phí (bỏ qua CurrentKhoa).
+        /// Dùng cho chức năng học phí – luôn đi server3.
+        /// </summary>
+        public static DataTable ExecuteStoredProcedureHocPhi(string spName, SqlParameter[] parameters = null) {
+            var dt = new DataTable();
+            var cs = GetConnectionString("HOCPHI");
 
-                        using (SqlDataAdapter adapter = new SqlDataAdapter(cmd))
-                        {
-                            adapter.Fill(dt);
-                        }
-                    }
+            try {
+                using (var conn = new SqlConnection(cs))
+                using (var cmd = new SqlCommand(spName, conn))
+                using (var da = new SqlDataAdapter(cmd)) {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.CommandTimeout = CommandTimeoutSeconds;
+                    if (parameters != null)
+                        cmd.Parameters.AddRange(parameters);
+
+                    conn.Open();
+                    da.Fill(dt);
                 }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Lỗi: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            } catch (Exception ex) {
+                MessageBox.Show("Lỗi ExecuteStoredProcedureHocPhi: " + ex.Message, "DB Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             return dt;
         }
 
-        // Kiểm tra kết nối
-        public static bool TestConnection(string connStr)
-        {
-            try
-            {
-                using (SqlConnection conn = new SqlConnection(connStr))
-                {
+        // ========= Kiểm tra kết nối =========
+
+        public static bool TestConnection(string connStr) {
+            try {
+                using (var conn = new SqlConnection(connStr)) {
                     conn.Open();
                     return true;
                 }
-            }
-            catch
-            {
+            } catch { return false; }
+        }
+
+        /// <summary>
+        /// Test cả 3 site: trả về (CNTT_OK, VT_OK, HOCPHI_OK)
+        /// </summary>
+        public static Tuple<bool, bool, bool> TestAllSites() {
+            bool okCntt = TestConnection(GetConnectionString("CNTT"));
+            bool okVt = TestConnection(GetConnectionString("VT"));
+            bool okHp = TestConnection(GetConnectionString("HOCPHI"));
+            return Tuple.Create(okCntt, okVt, okHp);
+        }
+
+        // ========= (Tuỳ chọn) Helper Transaction cho lệnh nhiều bước tại 1 site =========
+        public static bool ExecuteInTransaction(Func<SqlConnection, SqlTransaction, bool> work, string maKhoa = null) {
+            var cs = GetConnectionString(maKhoa);
+            try {
+                using (var conn = new SqlConnection(cs)) {
+                    conn.Open();
+                    using (var tran = conn.BeginTransaction()) {
+                        bool ok = work(conn, tran);
+                        if (ok) { tran.Commit(); return true; }
+                        tran.Rollback();
+                        return false;
+                    }
+                }
+            } catch (Exception ex) {
+                MessageBox.Show("Lỗi ExecuteInTransaction: " + ex.Message, "DB Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
+            }
+        }
+
+        /// <summary>
+        /// Kiểm tra sự tồn tại của 1 giá trị trong database
+        /// </summary>
+        public static bool CheckForExistence(string tableName, string columnName, string value, string maKhoa = null) {
+            string query = "SELECT " +
+                            "CASE" +
+                                "WHEN EXISTS " +
+                                    "(SELECT 1 " +
+                                    "FROM {tableName} " +
+                                    "WHERE {columnName} = @Value)" +
+                                "THEN 1 " +
+                                "ELSE 0" +
+                            "END";
+            var cs = GetConnectionString(maKhoa);
+
+            using (var conn = new SqlConnection(cs))
+            using (var cmd = new SqlCommand(query, conn)) {
+                cmd.CommandTimeout = CommandTimeoutSeconds;
+                cmd.Parameters.AddWithValue("@Value", value);
+
+                conn.Open();
+
+                int result = (int)cmd.ExecuteScalar();
+                return result == 1;
             }
         }
     }
