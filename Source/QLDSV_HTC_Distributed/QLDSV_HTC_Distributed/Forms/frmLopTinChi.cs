@@ -1,437 +1,780 @@
-﻿// File: Forms/FrmLopTinChi.cs
-using System;
-using System.Configuration;
+﻿using System;
 using System.Data;
 using System.Data.SqlClient;
-using System.Drawing;
 using System.Windows.Forms;
 
-namespace QLDSV_HTC_Distributed.Forms
-{
-    public class frmLopTinChi : Form
-    {
-        // Top filter/action bar
-        Panel pnlTop;
-        Label lblNk, lblHk;
-        ComboBox cboNienKhoa;
-        NumericUpDown numHocKy;
-        Button btnLoad, btnAdd, btnEdit, btnSave, btnCancel, btnToggleHuy;
+namespace QLDSV_HTC {
+    public partial class frmLopTinChi : Form {
+        private DataTable dtLTC;
+        private bool isAdding = false;
+        private int selectedMALTC = -1;
 
-        // Grid
-        DataGridView grid;
+        public frmLopTinChi() {
+            InitializeComponent();
+            LoadComboBoxes();
+            LoadData();
+        }
 
-        // Bottom edit panel
-        Panel pnlEdit;
-        TextBox txtMALTC, txtNienKhoa, txtMaMH, txtMaGV, txtMaKhoa;
-        NumericUpDown numHocKy2, numNhom, numSosvTT;
-        CheckBox chkHuyLop;
-        Label lbStatus;
+        private void InitializeComponent() {
+            this.txtNienKhoa = new System.Windows.Forms.TextBox();
+            this.txtHocKy = new System.Windows.Forms.TextBox();
+            this.txtNhom = new System.Windows.Forms.TextBox();
+            this.txtSoSVToiThieu = new System.Windows.Forms.TextBox();
+            this.txtMonHoc = new System.Windows.Forms.TextBox();
+            this.txtGiangVien = new System.Windows.Forms.TextBox();
+            this.cboTrangThai = new System.Windows.Forms.ComboBox();
+            this.cboHocKy = new System.Windows.Forms.ComboBox();
+            this.cboNienKhoa = new System.Windows.Forms.ComboBox();
+            this.cboMonHoc = new System.Windows.Forms.ComboBox();
+            this.cboGiangVien = new System.Windows.Forms.ComboBox();
+            this.dgvLopTinChi = new System.Windows.Forms.DataGridView();
+            this.btnThem = new System.Windows.Forms.Button();
+            this.btnXoa = new System.Windows.Forms.Button();
+            this.btnSua = new System.Windows.Forms.Button();
+            this.btnGhi = new System.Windows.Forms.Button();
+            this.btnHuy = new System.Windows.Forms.Button();
+            this.btnThoat = new System.Windows.Forms.Button();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.label1 = new System.Windows.Forms.Label();
+            this.label2 = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
+            this.label4 = new System.Windows.Forms.Label();
+            this.label5 = new System.Windows.Forms.Label();
+            this.label6 = new System.Windows.Forms.Label();
+            this.label7 = new System.Windows.Forms.Label();
+            this.label8 = new System.Windows.Forms.Label();
+            this.label9 = new System.Windows.Forms.Label();
+            this.label10 = new System.Windows.Forms.Label();
+            this.label11 = new System.Windows.Forms.Label();
+            this.labelTitle = new System.Windows.Forms.Label();
+            ((System.ComponentModel.ISupportInitialize)this.dgvLopTinChi).BeginInit();
+            this.groupBox1.SuspendLayout();
+            this.SuspendLayout();
 
-        DataTable _table;
-        enum EditMode { None, Add, Edit }
-        EditMode _mode = EditMode.None;
+            // labelTitle
+            this.labelTitle.AutoSize = true;
+            this.labelTitle.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold);
+            this.labelTitle.Location = new System.Drawing.Point(340, 15);
+            this.labelTitle.Name = "labelTitle";
+            this.labelTitle.Size = new System.Drawing.Size(200, 24);
+            this.labelTitle.Text = "QUẢN LÝ LỚP TÍN CHỈ" + DatabaseConnection.CurrentKhoa.Trim();
 
-        string ConnStr
-        {
-            get
-            {
-                var cs = ConfigurationManager.ConnectionStrings["QLDSV"]
-                      ?? ConfigurationManager.ConnectionStrings["QLDSV_TC"];
-                return cs != null ? cs.ConnectionString : "";
+            // groupBox1
+            this.groupBox1.Controls.Add(this.label1);
+            this.groupBox1.Controls.Add(this.label2);
+            this.groupBox1.Controls.Add(this.label3);
+            this.groupBox1.Controls.Add(this.label4);
+            this.groupBox1.Controls.Add(this.label5);
+            this.groupBox1.Controls.Add(this.label6);
+            this.groupBox1.Controls.Add(this.label11);
+            this.groupBox1.Controls.Add(this.txtNienKhoa);
+            this.groupBox1.Controls.Add(this.txtHocKy);
+            this.groupBox1.Controls.Add(this.txtNhom);
+            this.groupBox1.Controls.Add(this.txtMonHoc);
+            this.groupBox1.Controls.Add(this.txtGiangVien);
+            this.groupBox1.Controls.Add(this.txtSoSVToiThieu);
+            this.groupBox1.Controls.Add(this.cboTrangThai);
+            this.groupBox1.Location = new System.Drawing.Point(20, 50);
+            this.groupBox1.Size = new System.Drawing.Size(545, 160);
+            this.groupBox1.Text = "Thông tin lớp tín chỉ";
+
+            // label1
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(20, 35);
+            this.label1.Text = "Niên khóa:";
+
+            // label2
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(210, 35);
+            this.label2.Text = "Học kỳ:";
+
+            // label3
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(20, 75);
+            this.label3.Text = "Môn học:";
+
+            // label4
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(360, 75);
+            this.label4.Text = "Nhóm:";
+
+            // label11
+            this.label11.AutoSize = true;
+            this.label11.Location = new System.Drawing.Point(360, 35);
+            this.label11.Text = "Trạng thái:";
+
+            // cboTrangThai
+            this.cboTrangThai.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cboTrangThai.FormattingEnabled = true;
+            this.cboTrangThai.Location = new System.Drawing.Point(440, 32);
+            this.cboTrangThai.Size = new System.Drawing.Size(90, 24);
+            this.cboTrangThai.Enabled = false;
+
+            // txtNienKhoa
+            this.txtNienKhoa.Location = new System.Drawing.Point(100, 32);
+            this.txtNienKhoa.MaxLength = 9;
+            this.txtNienKhoa.Size = new System.Drawing.Size(80, 22);
+            this.txtNienKhoa.ReadOnly = true;
+
+            // txtHocKy
+            this.txtHocKy.Location = new System.Drawing.Point(270, 32);
+            this.txtHocKy.MaxLength = 1;
+            this.txtHocKy.Size = new System.Drawing.Size(60, 22);
+            this.txtHocKy.ReadOnly = true;
+
+            // txtMonHoc
+            this.txtMonHoc.Location = new System.Drawing.Point(100, 72);
+            this.txtMonHoc.Size = new System.Drawing.Size(230, 22);
+            this.txtMonHoc.ReadOnly = true;
+
+            // txtNhom
+            this.txtNhom.Location = new System.Drawing.Point(420, 72);
+            this.txtNhom.MaxLength = 2;
+            this.txtNhom.Size = new System.Drawing.Size(60, 22);
+            this.txtNhom.ReadOnly = true;
+
+            // label5
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(20, 115);
+            this.label5.Text = "Giảng viên:";
+
+            // txtGiangVien
+            this.txtGiangVien.Location = new System.Drawing.Point(100, 112);
+            this.txtGiangVien.Size = new System.Drawing.Size(230, 22);
+            this.txtGiangVien.ReadOnly = true;
+
+            // label6
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(360, 115);
+            this.label6.Text = "SV tối thiểu:";
+
+            // txtSoSVToiThieu
+            this.txtSoSVToiThieu.Location = new System.Drawing.Point(450, 112);
+            this.txtSoSVToiThieu.MaxLength = 3;
+            this.txtSoSVToiThieu.Size = new System.Drawing.Size(80, 22);
+            this.txtSoSVToiThieu.ReadOnly = true;
+
+            // GroupBox2
+            this.groupBox2.Location = new System.Drawing.Point(574, 50);
+            this.groupBox2.Size = new System.Drawing.Size(345, 160);
+            this.groupBox2.Text = "Lọc danh sách lớp tín chỉ";
+            this.groupBox2.Controls.Add(this.label7);
+            this.groupBox2.Controls.Add(this.label8);
+            this.groupBox2.Controls.Add(this.label9);
+            this.groupBox2.Controls.Add(this.label10);
+            this.groupBox2.Controls.Add(this.cboHocKy);
+            this.groupBox2.Controls.Add(this.cboGiangVien);
+            this.groupBox2.Controls.Add(this.cboMonHoc);
+            this.groupBox2.Controls.Add(this.cboNienKhoa);
+
+            // label7
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(20, 35);
+            this.label7.Text = "Niên khóa:";
+
+            // label8
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(210, 35);
+            this.label8.Text = "Học kỳ:";
+
+            // label9
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(20, 75);
+            this.label9.Text = "Môn học:";
+
+            // label10
+            this.label10.AutoSize = true;
+            this.label10.Location = new System.Drawing.Point(20, 115);
+            this.label10.Text = "Giảng viên:";
+
+            // cboHocKy
+            this.cboHocKy.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cboHocKy.FormattingEnabled = true;
+            this.cboHocKy.Location = new System.Drawing.Point(270, 32);
+            this.cboHocKy.Size = new System.Drawing.Size(60, 24);
+            this.cboHocKy.SelectedIndex = -1;
+            this.cboHocKy.Visible = true;
+            this.cboHocKy.SelectedIndexChanged += new System.EventHandler(this.cboHocKy_SelectedIndexChanged);
+
+            // cboNienKhoa
+            this.cboNienKhoa.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cboNienKhoa.FormattingEnabled = true;
+            this.cboNienKhoa.Location = new System.Drawing.Point(100, 32);
+            this.cboNienKhoa.Size = new System.Drawing.Size(100, 24);
+            this.cboNienKhoa.SelectedIndex = -1;
+            this.cboNienKhoa.Visible = true;
+            this.cboNienKhoa.SelectedIndexChanged += new System.EventHandler(this.cboNienKhoa_SelectedIndexChanged);
+
+            // cboMonHoc
+            this.cboMonHoc.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cboMonHoc.FormattingEnabled = true;
+            this.cboMonHoc.Location = new System.Drawing.Point(100, 72);
+            this.cboMonHoc.Size = new System.Drawing.Size(230, 24);
+            this.cboMonHoc.Visible = true;
+            this.cboMonHoc.SelectedIndexChanged += new System.EventHandler(this.cboMonHoc_SelectedIndexChanged);
+
+            // cboGiangVien
+            this.cboGiangVien.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cboGiangVien.FormattingEnabled = true;
+            this.cboGiangVien.Location = new System.Drawing.Point(100, 112);
+            this.cboGiangVien.Size = new System.Drawing.Size(230, 24);
+            this.cboGiangVien.SelectedIndexChanged += new System.EventHandler(this.cboGiangVien_SelectedIndexChanged);
+
+            // dgvLopTinChi
+            this.dgvLopTinChi.AllowUserToAddRows = false;
+            this.dgvLopTinChi.AllowUserToDeleteRows = false;
+            this.dgvLopTinChi.Location = new System.Drawing.Point(20, 265);
+            this.dgvLopTinChi.ReadOnly = true;
+            this.dgvLopTinChi.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.dgvLopTinChi.MultiSelect = false;
+            this.dgvLopTinChi.Size = new System.Drawing.Size(900, 280);
+            this.dgvLopTinChi.SelectionChanged += new System.EventHandler(this.dgvLopTinChi_SelectionChanged);
+
+            // btnThem
+            this.btnThem.Location = new System.Drawing.Point(140, 220);
+            this.btnThem.Size = new System.Drawing.Size(80, 30);
+            this.btnThem.Text = "Thêm";
+            this.btnThem.UseVisualStyleBackColor = true;
+            this.btnThem.Click += new System.EventHandler(this.btnThem_Click);
+
+            // btnXoa
+            this.btnXoa.Location = new System.Drawing.Point(240, 220);
+            this.btnXoa.Size = new System.Drawing.Size(80, 30);
+            this.btnXoa.Text = "Xóa";
+            this.btnXoa.UseVisualStyleBackColor = true;
+            this.btnXoa.Click += new System.EventHandler(this.btnXoa_Click);
+
+            // btnSua
+            this.btnSua.Location = new System.Drawing.Point(340, 220);
+            this.btnSua.Size = new System.Drawing.Size(80, 30);
+            this.btnSua.Text = "Sửa";
+            this.btnSua.UseVisualStyleBackColor = true;
+            this.btnSua.Click += new System.EventHandler(this.btnSua_Click);
+
+            // btnGhi
+            this.btnGhi.Enabled = false;
+            this.btnGhi.Location = new System.Drawing.Point(440, 220);
+            this.btnGhi.Size = new System.Drawing.Size(80, 30);
+            this.btnGhi.Text = "Ghi";
+            this.btnGhi.UseVisualStyleBackColor = true;
+            this.btnGhi.Click += new System.EventHandler(this.btnGhi_Click);
+            this.btnGhi.Enabled = false;
+
+            // btnHuy
+            this.btnHuy.Location = new System.Drawing.Point(540, 220);
+            this.btnHuy.Size = new System.Drawing.Size(80, 30);
+            this.btnHuy.Text = "Hủy";
+            this.btnHuy.UseVisualStyleBackColor = true;
+            this.btnHuy.Click += new System.EventHandler(this.btnHuy_Click);
+            this.btnHuy.Enabled = false;
+
+            // btnThoat
+            this.btnThoat.Location = new System.Drawing.Point(640, 220);
+            this.btnThoat.Size = new System.Drawing.Size(80, 30);
+            this.btnThoat.Text = "Thoát";
+            this.btnThoat.UseVisualStyleBackColor = true;
+            this.btnThoat.Click += new System.EventHandler(this.btnThoat_Click);
+
+            // frmLopTinChi
+            this.ClientSize = new System.Drawing.Size(940, 570);
+            this.Controls.Add(this.btnThoat);
+            this.Controls.Add(this.btnHuy);
+            this.Controls.Add(this.btnGhi);
+            this.Controls.Add(this.btnSua);
+            this.Controls.Add(this.btnXoa);
+            this.Controls.Add(this.btnThem);
+            this.Controls.Add(this.dgvLopTinChi);
+            this.Controls.Add(this.groupBox1);
+            this.Controls.Add(this.groupBox2);
+            this.Controls.Add(this.labelTitle);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+            this.MaximizeBox = false;
+            this.Name = "frmLopTinChi";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
+            this.Text = "Quản lý lớp tín chỉ";
+            ((System.ComponentModel.ISupportInitialize)this.dgvLopTinChi).EndInit();
+            this.groupBox1.ResumeLayout(false);
+            this.groupBox1.PerformLayout();
+            this.ResumeLayout(false);
+            this.PerformLayout();
+        }
+
+        private void cboGiangVien_SelectedIndexChanged(object sender, EventArgs e) {
+            if (isInitializing)
+                return;
+            string selectedMaGV = cboGiangVien.SelectedValue?.ToString();
+            if (string.IsNullOrEmpty(selectedMaGV)) {
+                dtLTC.DefaultView.RowFilter = ""; // Hiển thị tất cả
+            } else {
+                dtLTC.DefaultView.RowFilter = $"MAGV = '{selectedMaGV}'";
             }
         }
 
-        public frmLopTinChi()
-        {
-            // Form props
-            Text = "Quản lý Lớp tín chỉ (MVP)";
-            StartPosition = FormStartPosition.CenterScreen;
-            Font = new Font("Segoe UI", 9F, FontStyle.Regular);
-            ClientSize = new Size(980, 620);
-            FormBorderStyle = FormBorderStyle.FixedSingle;
-            MaximizeBox = false;
-
-            BuildUI();
-            WireEvents();
-            InitDefaults();
+        private void cboHocKy_SelectedIndexChanged(object sender, EventArgs e) {
+            if (isInitializing)
+                return;
+            string selectedHocKy = cboHocKy.SelectedValue?.ToString();
+            if (string.IsNullOrEmpty(selectedHocKy)) {
+                dtLTC.DefaultView.RowFilter = ""; // Hiển thị tất cả
+            } else {
+                dtLTC.DefaultView.RowFilter = $"HOCKY = {selectedHocKy}";
+            }
         }
 
-        void BuildUI()
-        {
-            // ===== Top panel =====
-            pnlTop = new Panel { Dock = DockStyle.Top, Height = 60, BackColor = Color.WhiteSmoke };
-            lblNk = new Label { Text = "Niên khóa:", AutoSize = true, Left = 12, Top = 20 };
-            cboNienKhoa = new ComboBox { Left = 80, Top = 16, Width = 120, DropDownStyle = ComboBoxStyle.DropDownList };
-
-            lblHk = new Label { Text = "Học kỳ:", AutoSize = true, Left = 215, Top = 20 };
-            numHocKy = new NumericUpDown { Left = 265, Top = 16, Width = 60, Minimum = 1, Maximum = 4, Value = 1 };
-
-            btnLoad = new Button { Text = "Load", Left = 335, Top = 14, Width = 70 };
-            btnAdd = new Button { Text = "Thêm", Left = 415, Top = 14, Width = 70 };
-            btnEdit = new Button { Text = "Sửa", Left = 495, Top = 14, Width = 70 };
-            btnSave = new Button { Text = "Lưu", Left = 575, Top = 14, Width = 70 };
-            btnCancel = new Button { Text = "Hủy thao tác", Left = 655, Top = 14, Width = 100 };
-            btnToggleHuy = new Button { Text = "Đánh dấu HỦY/PHỤC HỒI", Left = 765, Top = 14, Width = 190 };
-
-            pnlTop.Controls.AddRange(new Control[] {
-                lblNk, cboNienKhoa, lblHk, numHocKy,
-                btnLoad, btnAdd, btnEdit, btnSave, btnCancel, btnToggleHuy
-            });
-
-            // ===== Grid =====
-            grid = new DataGridView
-            {
-                Dock = DockStyle.Fill,
-                ReadOnly = true,
-                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-                AllowUserToAddRows = false,
-            };
-
-            // ===== Bottom edit panel =====
-            pnlEdit = new Panel { Dock = DockStyle.Bottom, Height = 180, BorderStyle = BorderStyle.FixedSingle };
-
-            int x = 12, y = 12, w = 90, gapX = 8, colW = 110, rowH = 28, lineGap = 36;
-
-            // Row 1
-            pnlEdit.Controls.Add(MakeLabel("MALTC", x, y));
-            txtMALTC = MakeTextBox(x + w + gapX, y, 100); txtMALTC.ReadOnly = true;
-
-            pnlEdit.Controls.Add(MakeLabel("Niên khóa", 250, y));
-            txtNienKhoa = MakeTextBox(250 + w + gapX, y, 120);
-
-            pnlEdit.Controls.Add(MakeLabel("Học kỳ", 430, y));
-            numHocKy2 = MakeNumeric(430 + w + gapX, y, 60, 1, 4, 1);
-
-            pnlEdit.Controls.Add(MakeLabel("MAMH", 520, y));
-            txtMaMH = MakeTextBox(520 + w + gapX, y, colW);
-
-            pnlEdit.Controls.Add(MakeLabel("Nhóm", 700, y));
-            numNhom = MakeNumeric(700 + w + gapX, y, 70, 1, 99, 1);
-
-            // Row 2
-            y += lineGap;
-            pnlEdit.Controls.Add(MakeLabel("MAGV", x, y));
-            txtMaGV = MakeTextBox(x + w + gapX, y, colW);
-
-            pnlEdit.Controls.Add(MakeLabel("MAKHOA", 250, y));
-            txtMaKhoa = MakeTextBox(250 + w + gapX, y, colW);
-
-            pnlEdit.Controls.Add(MakeLabel("Số SV tối thiểu", 430, y));
-            numSosvTT = MakeNumeric(430 + w + gapX, y, 90, 0, 1000, 0);
-
-            chkHuyLop = new CheckBox { Text = "Hủy lớp", Left = 700, Top = y + 3, AutoSize = true };
-            pnlEdit.Controls.Add(chkHuyLop);
-
-            // Status line
-            lbStatus = new Label
-            {
-                Dock = DockStyle.Bottom,
-                Height = 22,
-                TextAlign = ContentAlignment.MiddleCenter,
-                ForeColor = Color.DimGray
-            };
-            pnlEdit.Controls.Add(lbStatus);
-
-            // Add to Form
-            Controls.Add(grid);
-            Controls.Add(pnlEdit);
-            Controls.Add(pnlTop);
+        private void cboNienKhoa_SelectedIndexChanged(object sender, EventArgs e) {
+            if (isInitializing)
+                return;
+            string selectedNienKhoa = cboNienKhoa.SelectedValue?.ToString();
+            if (string.IsNullOrEmpty(selectedNienKhoa)) {
+                dtLTC.DefaultView.RowFilter = ""; // Hiển thị tất cả
+            } else {
+                dtLTC.DefaultView.RowFilter = $"NIENKHOA = '{selectedNienKhoa}'";
+            }
         }
 
-        Label MakeLabel(string text, int left, int top)
-        {
-            return new Label { Text = text + ":", AutoSize = true, Left = left, Top = top + 4 };
+        private void cboMonHoc_SelectedIndexChanged(object sender, EventArgs e) {
+            if (isInitializing)
+                return;
+            string selectedMaMH = cboMonHoc.SelectedValue?.ToString();
+            if (string.IsNullOrEmpty(selectedMaMH)) {
+                dtLTC.DefaultView.RowFilter = ""; // Hiển thị tất cả
+            } else {
+                dtLTC.DefaultView.RowFilter = $"MAMH = '{selectedMaMH}'";
+            }
         }
 
-        TextBox MakeTextBox(int left, int top, int width)
-        {
-            return new TextBox { Left = left, Top = top, Width = width, Height = 24 };
+        private System.Windows.Forms.TextBox txtNienKhoa;
+        private System.Windows.Forms.TextBox txtHocKy;
+        private System.Windows.Forms.TextBox txtNhom;
+        private System.Windows.Forms.TextBox txtSoSVToiThieu;
+        private System.Windows.Forms.TextBox txtMonHoc;
+        private System.Windows.Forms.TextBox txtGiangVien;
+        private System.Windows.Forms.ComboBox cboHocKy;
+        private System.Windows.Forms.ComboBox cboNienKhoa;
+        private System.Windows.Forms.ComboBox cboMonHoc;
+        private System.Windows.Forms.ComboBox cboGiangVien;
+        private System.Windows.Forms.DataGridView dgvLopTinChi;
+        private System.Windows.Forms.Button btnThem;
+        private System.Windows.Forms.Button btnXoa;
+        private System.Windows.Forms.Button btnSua;
+        private System.Windows.Forms.Button btnGhi;
+        private System.Windows.Forms.Button btnHuy;
+        private System.Windows.Forms.Button btnThoat;
+        private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.GroupBox groupBox2;
+        private System.Windows.Forms.ComboBox cboTrangThai;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.Label label10;
+        private System.Windows.Forms.Label label11;
+        private System.Windows.Forms.Label labelTitle;
+
+        private bool isInitializing = true;
+        private void LoadComboBoxes() {
+            try {
+                // Load trạng thái
+                DataTable dtTrangThai = new DataTable();
+                dtTrangThai.Columns.Add("HUYLOP", typeof(int));
+                dtTrangThai.Columns.Add("TRANGTHAI", typeof(string));
+                dtTrangThai.Rows.Add(0, "Chưa hủy");
+                dtTrangThai.Rows.Add(1, "Đã hủy");
+                cboTrangThai.DataSource = dtTrangThai;
+                cboTrangThai.DisplayMember = "TRANGTHAI";
+                cboTrangThai.ValueMember = "HUYLOP";
+                cboTrangThai.SelectedIndex = 0;
+
+                // Load niên khóa (danh sách niên khóa có trong LOPTINCHI)
+                string queryNienKhoa = "SELECT DISTINCT " +
+                                            "NIENKHOA " +
+                                        "FROM LOPTINCHI " +
+                                        "ORDER BY NIENKHOA " +
+                                        "DESC";
+                DataTable dtNienKhoa = DatabaseConnection.ExecuteQuery(queryNienKhoa);
+                DataRow dr = dtNienKhoa.NewRow();
+                dr["NIENKHOA"] = "";
+                dtNienKhoa.Rows.InsertAt(dr, 0);
+                cboNienKhoa.DataSource = dtNienKhoa;
+                cboNienKhoa.DisplayMember = "NIENKHOA";
+                cboNienKhoa.ValueMember = "NIENKHOA";
+
+                // Load học kỳ 
+                string queryHocKy = "SELECT DISTINCT " +
+                                        "HOCKY " +
+                                    "FROM LOPTINCHI " +
+                                    "ORDER BY HOCKY";
+                DataTable dtHocKy = DatabaseConnection.ExecuteQuery(queryHocKy);
+                DataRow drHocKy = dtHocKy.NewRow();
+                drHocKy["HOCKY"] = DBNull.Value;
+                dtHocKy.Rows.InsertAt(drHocKy, 0);
+                cboHocKy.DataSource = dtHocKy;
+                cboHocKy.DisplayMember = "HOCKY";
+                cboHocKy.ValueMember = "HOCKY";
+
+                // Load môn học (tất cả môn học - dùng chung)
+                string query = "SELECT " +
+                                    "MAMH, " +
+                                    "TENMH " +
+                                "FROM MONHOC " +
+                                "ORDER BY TENMH";
+                DataTable dtMH = DatabaseConnection.ExecuteQuery(query);
+                DataRow drMH = dtMH.NewRow();
+                drMH["MAMH"] = "";
+                drMH["TENMH"] = "";
+                dtMH.Rows.InsertAt(drMH, 0);
+                cboMonHoc.DataSource = dtMH;
+                cboMonHoc.DisplayMember = "TENMH";
+                cboMonHoc.ValueMember = "MAMH";
+
+                // Load giảng viên (tất cả GV - vì GV có thể dạy cả 2 khoa)
+                query = "SELECT " +
+                            "MAGV, " +
+                            "HO + ' ' + TEN AS HOTEN " +
+                        "FROM GIANGVIEN " +
+                        "ORDER BY TEN";
+                DataTable dtGV = DatabaseConnection.ExecuteQuery(query);
+                DataRow drGV = dtGV.NewRow();
+                drGV["MAGV"] = "";
+                drGV["HOTEN"] = "";
+                dtGV.Rows.InsertAt(drGV, 0);
+                cboGiangVien.DataSource = dtGV;
+                cboGiangVien.DisplayMember = "HOTEN";
+                cboGiangVien.ValueMember = "MAGV";
+            } catch (Exception ex) {
+                MessageBox.Show("Lỗi khi load dữ liệu: " + ex.Message, "Lỗi",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            isInitializing = false;
         }
 
-        NumericUpDown MakeNumeric(int left, int top, int width, int min, int max, int val)
-        {
-            var n = new NumericUpDown { Left = left, Top = top, Width = width, Minimum = min, Maximum = max, Value = val };
-            return n;
-        }
+        private void LoadData() {
+            string role = (DatabaseConnection.UserRole ?? "").Trim().ToUpperInvariant();
 
-        void WireEvents()
-        {
-            btnLoad.Click += btnLoad_Click;
-            btnAdd.Click += btnAdd_Click;
-            btnEdit.Click += btnEdit_Click;
-            btnSave.Click += btnSave_Click;
-            btnCancel.Click += btnCancel_Click;
-            btnToggleHuy.Click += btnToggleHuy_Click;
+            try {
+                string query = "SELECT " +
+                                    "ltc.MALTC, " +
+                                    "ltc.NIENKHOA, " +
+                                    "ltc.HOCKY, " +
+                                    "mh.MAMH, " +
+                                    "mh.TENMH, " +
+                                    "ltc.NHOM, " +
+                                    "gv.MAGV, " +
+                                    "gv.HO + ' ' + gv.TEN AS HOTENGV, " +
+                                    "k.MAKHOA, " +
+                                    "ltc.SOSVTOITHIEU, " +
+                                    "ltc.HUYLOP " +
+                               "FROM LOPTINCHI ltc " +
+                               "JOIN MONHOC mh ON ltc.MAMH = mh.MAMH " +
+                               "JOIN GIANGVIEN gv ON ltc.MAGV = gv.MAGV " +
+                               "JOIN KHOA k ON ltc.MAKHOA = k.MAKHOA " +
+                               "{WHERE} " +
+                               "ORDER BY ltc.NIENKHOA DESC, ltc.HOCKY, mh.TENMH, ltc.NHOM";
 
-            grid.SelectionChanged += grid_SelectionChanged;
+                object hocKyParam = string.IsNullOrWhiteSpace(txtHocKy.Text)
+                    ? (object)DBNull.Value
+                    : int.Parse(txtHocKy.Text.Trim());
 
-            cboNienKhoa.SelectedIndexChanged += cboNienKhoa_SelectedIndexChanged;
-            numHocKy.ValueChanged += numHocKy_ValueChanged;
-        }
+                SqlParameter[] parameters = {
+                    new SqlParameter("@MaKhoa", DatabaseConnection.CurrentKhoa)
+                };
 
-        void InitDefaults()
-        {
-            // Năm học mẫu
-            cboNienKhoa.Items.Add("2024-2025");
-            cboNienKhoa.Items.Add("2025-2026");
-            cboNienKhoa.SelectedIndex = 0;
-
-            txtNienKhoa.Text = cboNienKhoa.Text;
-            numHocKy2.Value = numHocKy.Value;
-
-            ToggleEdit(false);
-        }
-
-        void ToggleEdit(bool on)
-        {
-            pnlEdit.Enabled = true; // vẫn cho nhập; ta khóa bằng nút
-            txtNienKhoa.Enabled = on;
-            numHocKy2.Enabled = on;
-            txtMaMH.Enabled = on;
-            numNhom.Enabled = on;
-            txtMaGV.Enabled = on;
-            txtMaKhoa.Enabled = on;
-            numSosvTT.Enabled = on;
-            chkHuyLop.Enabled = on;
-
-            btnSave.Enabled = on;
-            btnCancel.Enabled = on;
-
-            btnAdd.Enabled = !on;
-            btnEdit.Enabled = !on && grid.CurrentRow != null;
-            btnLoad.Enabled = !on;
-            btnToggleHuy.Enabled = !on && grid.CurrentRow != null;
-        }
-
-        // ======= Actions =======
-
-        void btnLoad_Click(object sender, EventArgs e)
-        {
-            lbStatus.Text = "";
-            string nk = cboNienKhoa.Text;
-            int hk = (int)numHocKy.Value;
-
-            string sql = @"
-SELECT L.MALTC, L.NIENKHOA, L.HOCKY, L.MAMH, L.NHOM, L.MAGV, L.MAKHOA, L.SOSVTOITHIEU, L.HUYLOP
-FROM dbo.LOPTINCHI L
-WHERE L.NIENKHOA = @nk AND L.HOCKY = @hk
-ORDER BY L.MAMH, L.NHOM;";
-
-            try
-            {
-                using (var con = new SqlConnection(ConnStr))
-                using (var da = new SqlDataAdapter(sql, con))
-                {
-                    da.SelectCommand.Parameters.AddWithValue("@nk", nk);
-                    da.SelectCommand.Parameters.AddWithValue("@hk", hk);
-
-                    _table = new DataTable();
-                    da.Fill(_table);
-                    grid.DataSource = _table;
+                if (role == "PGV") {
+                    // Xem tất cả các khoa
+                    query = query.Replace("{WHERE}", "");
+                    dtLTC = DatabaseConnection.ExecuteQuery(query, parameters);
+                } else {
+                    // Xem theo khoa hiện tại
+                    query = query.Replace("{WHERE}", "WHERE ltc.MAKHOA = @MaKhoa");
+                    dtLTC = DatabaseConnection.ExecuteQuery(query, parameters);
                 }
-                lbStatus.Text = "Đã tải " + (_table != null ? _table.Rows.Count : 0) + " lớp tín chỉ.";
-                _mode = EditMode.None;
-                ToggleEdit(false);
-                grid_SelectionChanged(null, null);
+
+                dgvLopTinChi.DataSource = dtLTC;
+
+                if (dgvLopTinChi.Columns.Count > 0) {
+                    dgvLopTinChi.Columns["MALTC"].HeaderText = "Mã LTC";
+                    dgvLopTinChi.Columns["MALTC"].Width = 60;
+                    dgvLopTinChi.Columns["NIENKHOA"].HeaderText = "Niên khóa";
+                    dgvLopTinChi.Columns["NIENKHOA"].Width = 90;
+                    dgvLopTinChi.Columns["HOCKY"].HeaderText = "HK";
+                    dgvLopTinChi.Columns["HOCKY"].Width = 40;
+                    dgvLopTinChi.Columns["MAMH"].Visible = false;
+                    dgvLopTinChi.Columns["TENMH"].HeaderText = "Môn học";
+                    dgvLopTinChi.Columns["TENMH"].Width = 210;
+                    dgvLopTinChi.Columns["NHOM"].HeaderText = "Nhóm";
+                    dgvLopTinChi.Columns["NHOM"].Width = 60;
+                    dgvLopTinChi.Columns["MAGV"].Visible = false;
+                    dgvLopTinChi.Columns["HOTENGV"].HeaderText = "Giảng viên";
+                    dgvLopTinChi.Columns["HOTENGV"].Width = 180;
+                    dgvLopTinChi.Columns["MAKHOA"].HeaderText = "Khoa";
+                    dgvLopTinChi.Columns["MAKHOA"].Width = 80;
+                    dgvLopTinChi.Columns["SOSVTOITHIEU"].HeaderText = "SV tối thiểu";
+                    dgvLopTinChi.Columns["SOSVTOITHIEU"].Width = 80;
+                    dgvLopTinChi.Columns["HUYLOP"].HeaderText = "Đã hủy";
+                    dgvLopTinChi.Columns["HUYLOP"].Width = 60;
+                    dgvLopTinChi.Columns["HUYLOP"].Visible = false;
+                    dtLTC.Columns.Add("TRANGTHAI", typeof(string), "IIF(HUYLOP = 1, 'Đã hủy', 'Chưa hủy')");
+                    dgvLopTinChi.Columns["TRANGTHAI"].HeaderText = "Trạng thái";
+                    dgvLopTinChi.Columns["TRANGTHAI"].Width = 80;
+                }
+            } catch (Exception ex) {
+                MessageBox.Show("Lỗi khi load dữ liệu: " + ex.Message, "Lỗi",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Lỗi tải: " + ex.Message);
+        }
+
+        private void dgvLopTinChi_SelectionChanged(object sender, EventArgs e) {
+            if (dgvLopTinChi.CurrentRow != null) {
+                try {
+                    selectedMALTC = Convert.ToInt32(dgvLopTinChi.CurrentRow.Cells["MALTC"].Value);
+                    txtNienKhoa.Text = dgvLopTinChi.CurrentRow.Cells["NIENKHOA"].Value?.ToString().Trim();
+                    txtHocKy.Text = dgvLopTinChi.CurrentRow.Cells["HOCKY"].Value?.ToString();
+                    txtMonHoc.Text = dgvLopTinChi.CurrentRow.Cells["TENMH"].Value?.ToString().Trim();
+                    txtNhom.Text = dgvLopTinChi.CurrentRow.Cells["NHOM"].Value?.ToString();
+                    txtGiangVien.Text = dgvLopTinChi.CurrentRow.Cells["HOTENGV"].Value?.ToString().Trim();
+                    txtSoSVToiThieu.Text = dgvLopTinChi.CurrentRow.Cells["SOSVTOITHIEU"].Value?.ToString();
+                    cboTrangThai.SelectedValue = dgvLopTinChi.CurrentRow.Cells["HUYLOP"].Value;
+
+                    bool huyLop = dgvLopTinChi.CurrentRow.Cells["HUYLOP"].Value != DBNull.Value &&
+                                  Convert.ToBoolean(dgvLopTinChi.CurrentRow.Cells["HUYLOP"].Value);
+                } catch (Exception ex) {
+                    MessageBox.Show("Lỗi khi hiển thị dữ liệu: " + ex.Message, "Lỗi",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
         }
 
-        void grid_SelectionChanged(object sender, EventArgs e)
-        {
-            if (_mode != EditMode.None || grid.CurrentRow == null) return;
-            var r = grid.CurrentRow.DataBoundItem as DataRowView;
-            if (r == null) return;
-
-            txtMALTC.Text = SafeStr(r["MALTC"]);
-            txtNienKhoa.Text = SafeStr(r["NIENKHOA"]);
-            numHocKy2.Value = SafeInt(r["HOCKY"], 1);
-            txtMaMH.Text = SafeStr(r["MAMH"]);
-            numNhom.Value = SafeInt(r["NHOM"], 1);
-            txtMaGV.Text = SafeStr(r["MAGV"]);
-            txtMaKhoa.Text = SafeStr(r["MAKHOA"]);
-            numSosvTT.Value = SafeInt(r["SOSVTOITHIEU"], 0);
-            chkHuyLop.Checked = SafeBool(r["HUYLOP"]);
+        private void btnThem_Click(object sender, EventArgs e) {
+            isAdding = true;
+            selectedMALTC = -1;
+            // Nien khoa
+            txtNienKhoa.Clear();
+            txtNienKhoa.ReadOnly = false;
+            txtNienKhoa.Focus();
+            // Hoc ki
+            txtHocKy.Clear();
+            txtHocKy.ReadOnly = false;
+            // Trang thai
+            cboTrangThai.SelectedIndex = 0;
+            // Mon hoc
+            txtMonHoc.Clear();
+            txtMonHoc.ReadOnly = false;
+            // Giang vien
+            txtGiangVien.Clear();
+            txtGiangVien.ReadOnly = false;
+            // Nhom
+            txtNhom.Clear();
+            txtNhom.ReadOnly = false;
+            // So SV toi thieu
+            txtSoSVToiThieu.Clear();
+            txtSoSVToiThieu.ReadOnly = false;
+            btnHuy.Enabled = true;
+            btnGhi.Enabled = true;
         }
 
-        void btnAdd_Click(object sender, EventArgs e)
-        {
-            _mode = EditMode.Add;
-            ClearEdit();
-            txtNienKhoa.Text = cboNienKhoa.Text;
-            numHocKy2.Value = numHocKy.Value;
-            ToggleEdit(true);
-            txtMaMH.Focus();
-        }
+        private void btnXoa_Click(object sender, EventArgs e) {
+            if (dgvLopTinChi.CurrentRow == null) {
+                MessageBox.Show("Vui lòng chọn lớp tín chỉ cần xóa!", "Thông báo",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
 
-        void btnEdit_Click(object sender, EventArgs e)
-        {
-            if (grid.CurrentRow == null) return;
-            _mode = EditMode.Edit;
-            ToggleEdit(true);
-            txtMaMH.Focus();
-        }
+            if (MessageBox.Show("Bạn có chắc muốn hủy lớp tín chỉ này?\n(Lớp sẽ được đánh dấu hủy, không xóa hẳn)",
+                "Xác nhận", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes) {
+                try {
+                    int maLTC = Convert.ToInt32(dgvLopTinChi.CurrentRow.Cells["MALTC"].Value);
+                    string query = "UPDATE LOPTINCHI " +
+                                    "SET HUYLOP = 1 " +
+                                    "WHERE MALTC = @MaLTC";
+                    SqlParameter[] parameters = {
+                        new SqlParameter("@MaLTC", maLTC)
+                    };
 
-        void btnSave_Click(object sender, EventArgs e)
-        {
-            if (!ValidateEdit()) return;
-
-            try
-            {
-                using (var con = new SqlConnection(ConnStr))
-                {
-                    con.Open();
-
-                    if (_mode == EditMode.Add)
-                    {
-                        bool hasMaltc = !string.IsNullOrWhiteSpace(txtMALTC.Text);
-
-                        string sql = hasMaltc
-                            ? @"INSERT INTO dbo.LOPTINCHI(MALTC, NIENKHOA, HOCKY, MAMH, NHOM, MAGV, MAKHOA, SOSVTOITHIEU, HUYLOP)
-                                VALUES (@MALTC,@NIENKHOA,@HOCKY,@MAMH,@NHOM,@MAGV,@MAKHOA,@SOSVTT,@HUYLOP);"
-                            : @"INSERT INTO dbo.LOPTINCHI(NIENKHOA, HOCKY, MAMH, NHOM, MAGV, MAKHOA, SOSVTOITHIEU, HUYLOP)
-                                VALUES (@NIENKHOA,@HOCKY,@MAMH,@NHOM,@MAGV,@MAKHOA,@SOSVTT,@HUYLOP);
-                                SELECT SCOPE_IDENTITY();";
-
-                        using (var cmd = new SqlCommand(sql, con))
-                        {
-                            if (hasMaltc)
-                                cmd.Parameters.AddWithValue("@MALTC", Convert.ToInt32(txtMALTC.Text));
-
-                            FillParams(cmd);
-
-                            if (hasMaltc)
-                            {
-                                cmd.ExecuteNonQuery();
-                            }
-                            else
-                            {
-                                object newId = cmd.ExecuteScalar();
-                                if (newId != null && newId != DBNull.Value)
-                                    txtMALTC.Text = Convert.ToInt32(newId).ToString();
-                            }
-                        }
-                        lbStatus.Text = "Đã thêm lớp tín chỉ.";
+                    if (DatabaseConnection.ExecuteNonQuery(query, parameters)) {
+                        MessageBox.Show("Hủy lớp tín chỉ thành công!", "Thông báo",
+                            MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        LoadData();
                     }
-                    else if (_mode == EditMode.Edit)
-                    {
-                        string sql = @"
-UPDATE dbo.LOPTINCHI
-   SET NIENKHOA=@NIENKHOA, HOCKY=@HOCKY, MAMH=@MAMH, NHOM=@NHOM,
-       MAGV=@MAGV, MAKHOA=@MAKHOA, SOSVTOITHIEU=@SOSVTT, HUYLOP=@HUYLOP
- WHERE MALTC=@MALTC;";
+                } catch (Exception ex) {
+                    MessageBox.Show("Lỗi khi hủy lớp: " + ex.Message, "Lỗi",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
 
-                        using (var cmd = new SqlCommand(sql, con))
-                        {
-                            cmd.Parameters.AddWithValue("@MALTC", Convert.ToInt32(txtMALTC.Text));
-                            FillParams(cmd);
-                            cmd.ExecuteNonQuery();
-                        }
-                        lbStatus.Text = "Đã cập nhật lớp tín chỉ.";
-                    }
+        private void btnSua_Click(object sender, EventArgs e) {
+            isAdding = false;
+            btnGhi.Enabled = true;
+            btnHuy.Enabled = true;
+            if (dgvLopTinChi.CurrentRow == null) {
+                MessageBox.Show("Vui lòng chọn lớp tín chỉ cần sửa!", "Thông báo",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            // Nien khoa
+            txtNienKhoa.ReadOnly = false;
+            txtNienKhoa.Focus();
+            // Hoc ki
+            txtHocKy.ReadOnly = false;
+            // Trang thai
+            cboTrangThai.Enabled = true;
+            // Mon hoc
+            txtMonHoc.ReadOnly = false;
+            // Giang vien
+            txtGiangVien.ReadOnly = false;
+            // Nhom
+            txtNhom.ReadOnly = false;
+            // So SV toi thieu
+            txtSoSVToiThieu.ReadOnly = false;
+        }
+
+        private void btnGhi_Click(object sender, EventArgs e) {
+            try {
+                // Validate dữ liệu
+                if (string.IsNullOrWhiteSpace(txtNienKhoa.Text)) {
+                    MessageBox.Show("Vui lòng nhập niên khóa!", "Thông báo",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    txtNienKhoa.Focus();
+                    return;
                 }
 
-                _mode = EditMode.None;
-                ToggleEdit(false);
-                btnLoad.PerformClick(); // reload
-            }
-            catch (SqlException ex)
-            {
-                MessageBox.Show("Lỗi lưu: " + ex.Message);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Lỗi: " + ex.Message);
-            }
-        }
-
-        void btnCancel_Click(object sender, EventArgs e)
-        {
-            _mode = EditMode.None;
-            ToggleEdit(false);
-            grid_SelectionChanged(null, null);
-            lbStatus.Text = "Đã hủy thao tác.";
-        }
-
-        void btnToggleHuy_Click(object sender, EventArgs e)
-        {
-            if (grid.CurrentRow == null) return;
-            var r = grid.CurrentRow.DataBoundItem as DataRowView;
-            if (r == null) return;
-
-            int maltc = SafeInt(r["MALTC"], 0);
-            int newFlag = SafeBool(r["HUYLOP"]) ? 0 : 1;
-
-            try
-            {
-                using (var con = new SqlConnection(ConnStr))
-                using (var cmd = new SqlCommand("UPDATE dbo.LOPTINCHI SET HUYLOP=@f WHERE MALTC=@id;", con))
-                {
-                    cmd.Parameters.AddWithValue("@f", newFlag);
-                    cmd.Parameters.AddWithValue("@id", maltc);
-                    con.Open();
-                    cmd.ExecuteNonQuery();
+                int hocKy;
+                if (!int.TryParse(txtHocKy.Text, out hocKy) || hocKy < 1 || hocKy > 4) {
+                    MessageBox.Show("Học kỳ phải từ 1 đến 4!", "Thông báo",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    txtHocKy.Focus();
+                    return;
                 }
-                lbStatus.Text = newFlag == 1 ? "Đã đánh dấu HỦY lớp." : "Đã PHỤC HỒI lớp.";
-                btnLoad.PerformClick();
+
+                int nhom;
+                if (!int.TryParse(txtNhom.Text, out nhom) || nhom < 1) {
+                    MessageBox.Show("Nhóm phải >= 1!", "Thông báo",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    txtNhom.Focus();
+                    return;
+                }
+
+                int soSV;
+                if (!int.TryParse(txtSoSVToiThieu.Text, out soSV) || soSV < 1) {
+                    MessageBox.Show("Số sinh viên tối thiểu phải > 0!", "Thông báo",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    txtSoSVToiThieu.Focus();
+                    return;
+                }
+
+                if (txtMonHoc.Text == null || txtGiangVien.Text == null) {
+                    MessageBox.Show("Vui lòng nhập môn học và giảng viên!", "Thông báo",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                string maMH = "";
+                string queryMH = "SELECT MAMH FROM MONHOC WHERE TENMH = @TenMH";
+                SqlParameter[] paramMH = {
+                    new SqlParameter("@TenMH", txtMonHoc.Text.Trim())
+                };
+                DataTable dtMH = DatabaseConnection.ExecuteQuery(queryMH, paramMH);
+                if (dtMH.Rows.Count == 0) {
+                    MessageBox.Show("Môn học không tồn tại!", "Thông báo",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    txtMonHoc.Focus();
+                    return;
+                }
+
+                maMH = dtMH.Rows[0]["MAMH"].ToString().Trim();
+                string maGV = "";
+                string queryGV = "SELECT MAGV FROM GIANGVIEN WHERE HO + ' ' + TEN = @HoTen";
+                SqlParameter[] paramGV = {
+                    new SqlParameter("@HoTen", txtGiangVien.Text.Trim())
+                };
+                DataTable dtGV = DatabaseConnection.ExecuteQuery(queryGV, paramGV);
+                if (dtGV.Rows.Count == 0) {
+                    MessageBox.Show("Giảng viên không tồn tại!", "Thông báo",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    txtGiangVien.Focus();
+                    return;
+                }
+                maGV = dtGV.Rows[0]["MAGV"].ToString().Trim();
+
+                string query;
+                SqlParameter[] parameters;
+
+                if (isAdding) {
+                    // Thêm mới lớp tín chỉ
+                    // LƯU Ý: MAKHOA tự động lấy từ DatabaseConnection.CurrentKhoa
+                    query = @"INSERT INTO LOPTINCHI 
+                                (NIENKHOA, HOCKY, MAMH, NHOM, MAGV, MAKHOA, SOSVTOITHIEU, HUYLOP)
+                             VALUES 
+                                (@NienKhoa, @HocKy, @MaMH, @Nhom, @MaGV, @MaKhoa, @SoSV, @HuyLop)";
+
+                    parameters = new SqlParameter[] {
+                        new SqlParameter("@NienKhoa", txtNienKhoa.Text.Trim()),
+                        new SqlParameter("@HocKy", hocKy),
+                        new SqlParameter("@MaMH", maMH),
+                        new SqlParameter("@Nhom", nhom),
+                        new SqlParameter("@MaGV", maGV),
+                        new SqlParameter("@MaKhoa", DatabaseConnection.CurrentKhoa), // KEY: Tự động lấy khoa hiện tại
+                        new SqlParameter("@SoSV", soSV),
+                        new SqlParameter("@HuyLop", 0) // Mặc định khi tạo mới là chưa hủy
+                    };
+                } else {
+                    // Cập nhật lớp tín chỉ
+                    query = @"UPDATE LOPTINCHI 
+                             SET NIENKHOA = @NienKhoa, 
+                                 HOCKY = @HocKy, 
+                                 MAMH = @MaMH, 
+                                 NHOM = @Nhom, 
+                                 MAGV = @MaGV, 
+                                 SOSVTOITHIEU = @SoSV, 
+                                 HUYLOP = @HuyLop
+                             WHERE MALTC = @MaLTC";
+
+                    parameters = new SqlParameter[] {
+                        new SqlParameter("@NienKhoa", txtNienKhoa.Text.Trim()),
+                        new SqlParameter("@HocKy", hocKy),
+                        new SqlParameter("@MaMH", maMH),
+                        new SqlParameter("@Nhom", nhom),
+                        new SqlParameter("@MaGV", maGV),
+                        new SqlParameter("@SoSV", soSV),
+                        new SqlParameter("@MaLTC", selectedMALTC),
+                        new SqlParameter("@HuyLop", Convert.ToInt32(cboTrangThai.SelectedValue))
+                    };
+                }
+
+                if (DatabaseConnection.ExecuteNonQuery(query, parameters)) {
+                    MessageBox.Show("Lưu lớp tín chỉ thành công!", "Thông báo",
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    isAdding = false;
+                    btnGhi.Enabled = false;
+                    btnHuy.Enabled = false;
+                    LoadData();
+                }
+            } catch (Exception ex) {
+                MessageBox.Show("Lỗi khi lưu: " + ex.Message, "Lỗi",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Lỗi cập nhật trạng thái: " + ex.Message);
-            }
         }
 
-        void cboNienKhoa_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            if (_mode == EditMode.Add) txtNienKhoa.Text = cboNienKhoa.Text;
+        private void btnHuy_Click(object sender, EventArgs e) {
+            isAdding = false;
+            btnGhi.Enabled = false;
+            LoadData();
+
+            if (dgvLopTinChi.Rows.Count > 0)
+                dgvLopTinChi.Rows[0].Selected = true;
         }
 
-        void numHocKy_ValueChanged(object sender, EventArgs e)
-        {
-            if (_mode == EditMode.Add) numHocKy2.Value = numHocKy.Value;
+        private void btnThoat_Click(object sender, EventArgs e) {
+            this.Hide();
+            frmMain frm = new frmMain();
+            frm.ShowDialog();
+            this.Close();
         }
-
-        // ===== Helpers =====
-        void ClearEdit()
-        {
-            txtMALTC.Text = "";
-            txtNienKhoa.Text = "";
-            numHocKy2.Value = 1;
-            txtMaMH.Text = "";
-            numNhom.Value = 1;
-            txtMaGV.Text = "";
-            txtMaKhoa.Text = "";
-            numSosvTT.Value = 0;
-            chkHuyLop.Checked = false;
-        }
-
-        void FillParams(SqlCommand cmd)
-        {
-            cmd.Parameters.AddWithValue("@NIENKHOA", txtNienKhoa.Text.Trim());
-            cmd.Parameters.AddWithValue("@HOCKY", (int)numHocKy2.Value);
-            cmd.Parameters.AddWithValue("@MAMH", txtMaMH.Text.Trim());
-            cmd.Parameters.AddWithValue("@NHOM", (int)numNhom.Value);
-            cmd.Parameters.AddWithValue("@MAGV", txtMaGV.Text.Trim());
-            cmd.Parameters.AddWithValue("@MAKHOA", txtMaKhoa.Text.Trim());
-            cmd.Parameters.AddWithValue("@SOSVTT", (int)numSosvTT.Value);
-            cmd.Parameters.AddWithValue("@HUYLOP", chkHuyLop.Checked ? 1 : 0);
-        }
-
-        bool ValidateEdit()
-        {
-            if (string.IsNullOrWhiteSpace(txtNienKhoa.Text)) { MessageBox.Show("Niên khóa không được trống."); return false; }
-            if (string.IsNullOrWhiteSpace(txtMaMH.Text)) { MessageBox.Show("Mã môn học không được trống."); return false; }
-            if (string.IsNullOrWhiteSpace(txtMaGV.Text)) { MessageBox.Show("Mã giảng viên không được trống."); return false; }
-            if (string.IsNullOrWhiteSpace(txtMaKhoa.Text)) { MessageBox.Show("Mã khoa không được trống."); return false; }
-            return true;
-        }
-
-        string SafeStr(object v) { return v == null || v == DBNull.Value ? "" : v.ToString(); }
-        int SafeInt(object v, int def) { try { return v == null || v == DBNull.Value ? def : Convert.ToInt32(v); } catch { return def; } }
-        bool SafeBool(object v) { try { return v != null && v != DBNull.Value && Convert.ToBoolean(v); } catch { return false; } }
     }
 }
