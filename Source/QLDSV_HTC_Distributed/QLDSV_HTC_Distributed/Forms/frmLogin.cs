@@ -128,7 +128,7 @@ namespace QLDSV_HTC {
 
             string role = cboRole.SelectedItem.ToString();
 
-            if ((role == "KHOA") && cboKhoa.SelectedItem == null) {
+            if ((role == "KHOA" || role == "SV") && cboKhoa.SelectedItem == null) {
                 MessageBox.Show("Vui lòng chọn khoa!", "Thông báo",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 cboKhoa.Focus();
@@ -138,7 +138,7 @@ namespace QLDSV_HTC {
             // Save login information
             DatabaseConnection.UserRole = role;
 
-            if ((role == "KHOA") && cboKhoa.SelectedItem != null) {
+            if ((role == "KHOA" || role == "SV") && cboKhoa.SelectedItem != null) {
                 // Get khoaText and padding 10 character (similar to database)
                 string khoaText = cboKhoa.SelectedItem.ToString();
                 string maKhoa = khoaText.StartsWith("CNTT") ? "CNTT" : "VT";
