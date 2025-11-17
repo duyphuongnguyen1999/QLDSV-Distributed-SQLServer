@@ -22,7 +22,7 @@ namespace QLDSV_HTC {
             this.txtSoSVToiThieu = new System.Windows.Forms.TextBox();
             this.txtMonHoc = new System.Windows.Forms.TextBox();
             this.txtGiangVien = new System.Windows.Forms.TextBox();
-            this.cboTrangThai = new System.Windows.Forms.ComboBox();
+            this.txtTrangThai = new System.Windows.Forms.TextBox();
             this.cboHocKy = new System.Windows.Forms.ComboBox();
             this.cboNienKhoa = new System.Windows.Forms.ComboBox();
             this.cboMonHoc = new System.Windows.Forms.ComboBox();
@@ -74,7 +74,7 @@ namespace QLDSV_HTC {
             this.groupBox1.Controls.Add(this.txtMonHoc);
             this.groupBox1.Controls.Add(this.txtGiangVien);
             this.groupBox1.Controls.Add(this.txtSoSVToiThieu);
-            this.groupBox1.Controls.Add(this.cboTrangThai);
+            this.groupBox1.Controls.Add(this.txtTrangThai);
             this.groupBox1.Location = new System.Drawing.Point(20, 50);
             this.groupBox1.Size = new System.Drawing.Size(545, 160);
             this.groupBox1.Text = "Thông tin lớp tín chỉ";
@@ -104,12 +104,11 @@ namespace QLDSV_HTC {
             this.label11.Location = new System.Drawing.Point(360, 35);
             this.label11.Text = "Trạng thái:";
 
-            // cboTrangThai
-            this.cboTrangThai.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cboTrangThai.FormattingEnabled = true;
-            this.cboTrangThai.Location = new System.Drawing.Point(440, 32);
-            this.cboTrangThai.Size = new System.Drawing.Size(90, 24);
-            this.cboTrangThai.Enabled = false;
+            // txtTrangThai
+            this.txtTrangThai.AutoSize = true;
+            this.txtTrangThai.Location = new System.Drawing.Point(440, 32);
+            this.txtTrangThai.Size = new System.Drawing.Size(90, 24);
+            this.txtTrangThai.ReadOnly = true;
 
             // txtNienKhoa
             this.txtNienKhoa.Location = new System.Drawing.Point(100, 32);
@@ -350,6 +349,7 @@ namespace QLDSV_HTC {
         private System.Windows.Forms.TextBox txtSoSVToiThieu;
         private System.Windows.Forms.TextBox txtMonHoc;
         private System.Windows.Forms.TextBox txtGiangVien;
+        private System.Windows.Forms.TextBox txtTrangThai;
         private System.Windows.Forms.ComboBox cboHocKy;
         private System.Windows.Forms.ComboBox cboNienKhoa;
         private System.Windows.Forms.ComboBox cboMonHoc;
@@ -363,7 +363,6 @@ namespace QLDSV_HTC {
         private System.Windows.Forms.Button btnThoat;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.GroupBox groupBox2;
-        private System.Windows.Forms.ComboBox cboTrangThai;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label3;
@@ -380,17 +379,6 @@ namespace QLDSV_HTC {
         private bool isInitializing = true;
         private void LoadComboBoxes() {
             try {
-                // Load trạng thái
-                DataTable dtTrangThai = new DataTable();
-                dtTrangThai.Columns.Add("HUYLOP", typeof(int));
-                dtTrangThai.Columns.Add("TRANGTHAI", typeof(string));
-                dtTrangThai.Rows.Add(0, "Chưa hủy");
-                dtTrangThai.Rows.Add(1, "Đã hủy");
-                cboTrangThai.DataSource = dtTrangThai;
-                cboTrangThai.DisplayMember = "TRANGTHAI";
-                cboTrangThai.ValueMember = "HUYLOP";
-                cboTrangThai.SelectedIndex = 0;
-
                 // Load niên khóa (danh sách niên khóa có trong LOPTINCHI)
                 string queryNienKhoa = "SELECT DISTINCT " +
                                             "NIENKHOA " +
@@ -539,7 +527,7 @@ namespace QLDSV_HTC {
                     txtNhom.Text = dgvLopTinChi.CurrentRow.Cells["NHOM"].Value?.ToString();
                     txtGiangVien.Text = dgvLopTinChi.CurrentRow.Cells["HOTENGV"].Value?.ToString().Trim();
                     txtSoSVToiThieu.Text = dgvLopTinChi.CurrentRow.Cells["SOSVTOITHIEU"].Value?.ToString();
-                    cboTrangThai.SelectedValue = dgvLopTinChi.CurrentRow.Cells["HUYLOP"].Value;
+                    txtTrangThai.Text = dgvLopTinChi.CurrentRow.Cells["TRANGTHAI"].Value?.ToString();
 
                     bool huyLop = dgvLopTinChi.CurrentRow.Cells["HUYLOP"].Value != DBNull.Value &&
                                   Convert.ToBoolean(dgvLopTinChi.CurrentRow.Cells["HUYLOP"].Value);
@@ -561,7 +549,8 @@ namespace QLDSV_HTC {
             txtHocKy.Clear();
             txtHocKy.ReadOnly = false;
             // Trang thai
-            cboTrangThai.SelectedIndex = 0;
+            txtTrangThai.Clear();
+            txtTrangThai.ReadOnly = false;
             // Mon hoc
             txtMonHoc.Clear();
             txtMonHoc.ReadOnly = false;
@@ -623,7 +612,7 @@ namespace QLDSV_HTC {
             // Hoc ki
             txtHocKy.ReadOnly = false;
             // Trang thai
-            cboTrangThai.Enabled = true;
+            txtTrangThai.Enabled = true;
             // Mon hoc
             txtMonHoc.ReadOnly = false;
             // Giang vien
@@ -732,7 +721,6 @@ namespace QLDSV_HTC {
                                  NHOM = @Nhom, 
                                  MAGV = @MaGV, 
                                  SOSVTOITHIEU = @SoSV, 
-                                 HUYLOP = @HuyLop
                              WHERE MALTC = @MaLTC";
 
                     parameters = new SqlParameter[] {
@@ -743,7 +731,6 @@ namespace QLDSV_HTC {
                         new SqlParameter("@MaGV", maGV),
                         new SqlParameter("@SoSV", soSV),
                         new SqlParameter("@MaLTC", selectedMALTC),
-                        new SqlParameter("@HuyLop", Convert.ToInt32(cboTrangThai.SelectedValue))
                     };
                 }
 
