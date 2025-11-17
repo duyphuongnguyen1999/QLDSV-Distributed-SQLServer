@@ -3,22 +3,19 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Windows.Forms;
 
-namespace QLDSV_HTC
-{
-    public partial class frmDangKyLTC : Form
-    {
-        public frmDangKyLTC()
-        {
+namespace QLDSV_HTC {
+    public partial class frmDangKyLTC : Form {
+        public frmDangKyLTC() {
             InitializeComponent();
+            LoadComboBox();
         }
 
-        private void InitializeComponent()
-        {
+        private void InitializeComponent() {
             this.txtMaSV = new System.Windows.Forms.TextBox();
             this.txtHoTen = new System.Windows.Forms.TextBox();
             this.txtMaLop = new System.Windows.Forms.TextBox();
-            this.txtNienKhoa = new System.Windows.Forms.TextBox();
-            this.txtHocKy = new System.Windows.Forms.TextBox();
+            this.cboNienKhoa = new System.Windows.Forms.ComboBox();
+            this.cboHocKy = new System.Windows.Forms.ComboBox();
             this.dgvLopTinChi = new System.Windows.Forms.DataGridView();
             this.btnTimKiem = new System.Windows.Forms.Button();
             this.btnDangKy = new System.Windows.Forms.Button();
@@ -30,7 +27,7 @@ namespace QLDSV_HTC
             this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvLopTinChi)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)this.dgvLopTinChi).BeginInit();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.SuspendLayout();
@@ -87,9 +84,9 @@ namespace QLDSV_HTC
 
             // groupBox2
             this.groupBox2.Controls.Add(this.dgvLopTinChi);
-            this.groupBox2.Controls.Add(this.txtHocKy);
+            this.groupBox2.Controls.Add(this.cboHocKy);
             this.groupBox2.Controls.Add(this.label5);
-            this.groupBox2.Controls.Add(this.txtNienKhoa);
+            this.groupBox2.Controls.Add(this.cboNienKhoa);
             this.groupBox2.Controls.Add(this.label4);
             this.groupBox2.Location = new System.Drawing.Point(20, 160);
             this.groupBox2.Size = new System.Drawing.Size(900, 380);
@@ -100,24 +97,26 @@ namespace QLDSV_HTC
             this.label4.Location = new System.Drawing.Point(20, 35);
             this.label4.Text = "Niên khóa:";
 
-            // txtNienKhoa
-            this.txtNienKhoa.Location = new System.Drawing.Point(100, 32);
-            this.txtNienKhoa.Size = new System.Drawing.Size(100, 22);
-            this.txtNienKhoa.MaxLength = 9;
-            this.txtNienKhoa.Text = "2024-2025";
-            this.txtNienKhoa.TextChanged += new System.EventHandler(this.txtNienKhoa_TextChanged);
+            // cboNienKhoa
+            this.cboNienKhoa.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDown;
+            this.cboNienKhoa.FormattingEnabled = true;
+            this.cboNienKhoa.Location = new System.Drawing.Point(100, 32);
+            this.cboNienKhoa.Size = new System.Drawing.Size(100, 22);
+            this.cboNienKhoa.SelectedIndex = -1;
+            this.cboNienKhoa.SelectedIndexChanged += new System.EventHandler(this.cboNienKhoa_SelectedIndexChanged);
 
             // label5
             this.label5.AutoSize = true;
             this.label5.Location = new System.Drawing.Point(230, 35);
             this.label5.Text = "Học kỳ:";
 
-            // txtHocKy
-            this.txtHocKy.Location = new System.Drawing.Point(290, 32);
-            this.txtHocKy.Size = new System.Drawing.Size(60, 22);
-            this.txtHocKy.MaxLength = 1;
-            this.txtHocKy.Text = "1";
-            this.txtHocKy.TextChanged += new System.EventHandler(this.txtHocKy_TextChanged);
+            // cboHocKy
+            this.cboHocKy.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDown;
+            this.cboHocKy.FormattingEnabled = true;
+            this.cboHocKy.Location = new System.Drawing.Point(290, 32);
+            this.cboHocKy.Size = new System.Drawing.Size(60, 22);
+            this.cboHocKy.SelectedIndex = -1;
+            this.cboHocKy.SelectedIndexChanged += new System.EventHandler(this.cboHocKy_SelectedIndexChanged);
 
             // dgvLopTinChi
             this.dgvLopTinChi.AllowUserToAddRows = false;
@@ -149,7 +148,7 @@ namespace QLDSV_HTC
             this.Name = "frmDangKyLTC";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Đăng ký lớp tín chỉ";
-            ((System.ComponentModel.ISupportInitialize)(this.dgvLopTinChi)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)this.dgvLopTinChi).EndInit();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.groupBox2.ResumeLayout(false);
@@ -157,11 +156,57 @@ namespace QLDSV_HTC
             this.ResumeLayout(false);
         }
 
+        private void cboHocKy_SelectedIndexChanged(object sender, EventArgs e) {
+            string selectedHocKy = cboHocKy.SelectedItem?.ToString();
+            string selectedNienKhoa = cboNienKhoa.SelectedItem?.ToString();
+            if (dtLopTinChi == null)
+                return;
+            dtLopTinChi.DefaultView.RowFilter = "1=1 ";
+
+            if (!string.IsNullOrEmpty(selectedHocKy)) {
+                dtLopTinChi.DefaultView.RowFilter += $" AND HOCKY = '{selectedHocKy}'";
+            }
+            if (!string.IsNullOrEmpty(selectedNienKhoa)) {
+                dtLopTinChi.DefaultView.RowFilter += $" AND NIENKHOA = '{selectedNienKhoa}'";
+            }
+        }
+
+        private void cboNienKhoa_SelectedIndexChanged(object sender, EventArgs e) {
+            string selectedHocKy = cboHocKy.SelectedItem?.ToString();
+            string selectedNienKhoa = cboNienKhoa.SelectedItem?.ToString();
+            if (dtLopTinChi == null)
+                return;
+            dtLopTinChi.DefaultView.RowFilter = "1=1 ";
+
+            if (!string.IsNullOrEmpty(selectedHocKy)) {
+                dtLopTinChi.DefaultView.RowFilter += $" AND HOCKY = '{selectedHocKy}'";
+            }
+            if (!string.IsNullOrEmpty(selectedNienKhoa)) {
+                dtLopTinChi.DefaultView.RowFilter += $" AND NIENKHOA = '{selectedNienKhoa}'";
+            }
+        }
+
+        private void LoadComboBox() {
+            // Load Niên khóa
+            cboNienKhoa.Items.Clear();
+            for (int year = 2015; year <= DateTime.Now.Year + 1; year++) {
+                cboNienKhoa.Items.Add($"{year}-{year + 1}");
+            }
+            cboNienKhoa.SelectedIndex = -1;
+            // Load Học kỳ
+            cboHocKy.Items.Clear();
+            cboHocKy.Items.Add("1");
+            cboHocKy.Items.Add("2");
+            cboHocKy.Items.Add("3");
+            cboHocKy.Items.Add("4");
+            cboHocKy.SelectedIndex = -1;
+        }
+
         private System.Windows.Forms.TextBox txtMaSV;
         private System.Windows.Forms.TextBox txtHoTen;
         private System.Windows.Forms.TextBox txtMaLop;
-        private System.Windows.Forms.TextBox txtNienKhoa;
-        private System.Windows.Forms.TextBox txtHocKy;
+        private System.Windows.Forms.ComboBox cboNienKhoa;
+        private System.Windows.Forms.ComboBox cboHocKy;
         private System.Windows.Forms.DataGridView dgvLopTinChi;
         private System.Windows.Forms.Button btnTimKiem;
         private System.Windows.Forms.Button btnDangKy;
@@ -174,140 +219,218 @@ namespace QLDSV_HTC
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label5;
 
-        private void btnTimKiem_Click(object sender, EventArgs e)
-        {
-            if (string.IsNullOrWhiteSpace(txtMaSV.Text))
-            {
+        private void btnTimKiem_Click(object sender, EventArgs e) {
+            if (string.IsNullOrWhiteSpace(txtMaSV.Text)) {
                 MessageBox.Show("Vui lòng nhập mã sinh viên!", "Thông báo");
                 return;
             }
 
-            string query = @"SELECT sv.MASV, sv.HO + ' ' + sv.TEN AS HOTEN, sv.MALOP, l.MAKHOA
-                           FROM Sinhvien sv
-                           JOIN Lop l ON sv.MALOP = l.MALOP
-                           WHERE sv.MASV = @MaSV AND sv.DANGHIHOC = 0";
+            string query = @"SELECT 
+                                sv.MASV, 
+                                sv.HO + ' ' + sv.TEN AS HOTEN, 
+                                sv.MALOP, 
+                                l.MAKHOA
+                            FROM SINHVIEN sv
+                            JOIN 
+                                LOP l ON sv.MALOP = l.MALOP
+                            WHERE 
+                                sv.MASV = @MaSV AND sv.DANGHIHOC = 0";
 
             SqlParameter[] parameters = {
                 new SqlParameter("@MaSV", txtMaSV.Text.Trim())
             };
 
-            // Tìm trong cả 2 server
-            DataTable dt = DatabaseConnection.ExecuteQuery(query, parameters, "CNTT");
-            if (dt.Rows.Count == 0)
-            {
-                dt = DatabaseConnection.ExecuteQuery(query, parameters, "VT");
-            }
+            DataTable dt = DatabaseConnection.ExecuteQuery(query, parameters);
 
-            if (dt.Rows.Count > 0)
-            {
+            if (dt.Rows.Count > 0) {
                 txtHoTen.Text = dt.Rows[0]["HOTEN"].ToString();
                 txtMaLop.Text = dt.Rows[0]["MALOP"].ToString().Trim();
-                DatabaseConnection.CurrentKhoa = dt.Rows[0]["MAKHOA"].ToString().Trim();
-
                 LoadLopTinChi();
-            }
-            else
-            {
+            } else {
                 MessageBox.Show("Không tìm thấy sinh viên!", "Thông báo");
                 txtHoTen.Clear();
                 txtMaLop.Clear();
             }
         }
 
-        private void txtNienKhoa_TextChanged(object sender, EventArgs e)
-        {
-            if (!string.IsNullOrWhiteSpace(txtMaSV.Text) && !string.IsNullOrWhiteSpace(txtHoTen.Text))
-            {
-                LoadLopTinChi();
+        private DataTable dtLopTinChi;
+
+        private void LoadLopTinChi() {
+            try {
+                string role = (DatabaseConnection.UserRole ?? "").Trim().ToUpperInvariant();
+
+                string query =
+                    "SELECT " +
+                    "    ltc.MALTC, " +
+                    "    ltc.MAMH, " +
+                    "    ltc.NIENKHOA, " +
+                    "    ltc.HOCKY, " +
+                    "    ltc.NHOM, " +
+                    "    mh.TENMH, " +
+                    "    gv.HO + ' ' + gv.TEN AS HOTENGV, " +
+                    "    ltc.SOSVTOITHIEU, " +
+                    "    ISNULL(dk.SOSV_DADANGKY, 0) AS SOSV_DADANGKY " +
+                    "FROM LOPTINCHI ltc " +
+                    "JOIN MONHOC   mh ON ltc.MAMH = mh.MAMH " +
+                    "JOIN GIANGVIEN gv ON ltc.MAGV = gv.MAGV " +
+                    // Đếm số SV ĐÃ ĐĂNG KÝ (không bị HUYDANGKY)
+                    "LEFT JOIN ( " +
+                    "    SELECT MALTC, COUNT(*) AS SOSV_DADANGKY " +
+                    "    FROM DANGKY " +
+                    "    WHERE HUYDANGKY = 0 " +
+                    "    GROUP BY MALTC " +
+                    ") dk ON dk.MALTC = ltc.MALTC " +
+                    "WHERE {KHOA} AND ltc.HUYLOP = 0 " +
+                    "ORDER BY ltc.NIENKHOA DESC, ltc.HOCKY, mh.TENMH, ltc.NHOM;";
+
+                SqlParameter[] parameters = {
+                    new SqlParameter("@MaKhoa", DatabaseConnection.CurrentKhoa)
+                };
+
+                if (role == "PGV") {
+                    // PGV xem tất cả khoa
+                    query = query.Replace("{KHOA}", "1 = 1");
+                    dtLopTinChi = DatabaseConnection.ExecuteQuery(query);
+                } else {
+                    // Cán bộ khoa chỉ xem theo khoa hiện tại
+                    query = query.Replace("{KHOA}", "ltc.MAKHOA = @MaKhoa");
+                    dtLopTinChi = DatabaseConnection.ExecuteQuery(query, parameters);
+                }
+
+                dgvLopTinChi.DataSource = dtLopTinChi;
+
+                if (dgvLopTinChi.Columns.Count > 0) {
+                    dgvLopTinChi.Columns["MALTC"].HeaderText = "Mã LTC";
+                    dgvLopTinChi.Columns["MALTC"].Width = 60;
+
+                    dgvLopTinChi.Columns["MAMH"].HeaderText = "Mã MH";
+                    dgvLopTinChi.Columns["MAMH"].Width = 60;
+                    dgvLopTinChi.Columns["MAMH"].Visible = false;
+
+                    dgvLopTinChi.Columns["TENMH"].HeaderText = "Tên môn học";
+                    dgvLopTinChi.Columns["TENMH"].Width = 240;
+
+                    dgvLopTinChi.Columns["NHOM"].HeaderText = "Nhóm";
+                    dgvLopTinChi.Columns["NHOM"].Width = 60;
+
+                    dgvLopTinChi.Columns["HOTENGV"].HeaderText = "Giảng viên";
+                    dgvLopTinChi.Columns["HOTENGV"].Width = 150;
+
+                    dgvLopTinChi.Columns["SOSVTOITHIEU"].HeaderText = "SV tối thiểu";
+                    dgvLopTinChi.Columns["SOSVTOITHIEU"].Width = 80;
+
+                    dgvLopTinChi.Columns["SOSV_DADANGKY"].HeaderText = "SV đã đăng ký";
+                    dgvLopTinChi.Columns["SOSV_DADANGKY"].Width = 90;
+
+                    dgvLopTinChi.Columns["NIENKHOA"].HeaderText = "Niên khóa";
+                    dgvLopTinChi.Columns["NIENKHOA"].Width = 80;
+                    //dgvLopTinChi.Columns["NIENKHOA"].Visible = false;
+
+                    dgvLopTinChi.Columns["HOCKY"].HeaderText = "Học kỳ";
+                    dgvLopTinChi.Columns["HOCKY"].Width = 60;
+                    //dgvLopTinChi.Columns["HOCKY"].Visible = false;
+                }
+            } catch (Exception ex) {
+                MessageBox.Show("Lỗi khi load lớp tín chỉ: " + ex.Message,
+                                "DB Error",
+                                MessageBoxButtons.OK,
+                                MessageBoxIcon.Error);
             }
         }
 
-        private void txtHocKy_TextChanged(object sender, EventArgs e)
-        {
-            if (!string.IsNullOrWhiteSpace(txtMaSV.Text) && !string.IsNullOrWhiteSpace(txtHoTen.Text))
-            {
-                LoadLopTinChi();
-            }
-        }
-
-        private void LoadLopTinChi()
-        {
-            if (string.IsNullOrWhiteSpace(txtNienKhoa.Text) || string.IsNullOrWhiteSpace(txtHocKy.Text))
-                return;
-
-            SqlParameter[] parameters = {
-                new SqlParameter("@NienKhoa", txtNienKhoa.Text.Trim()),
-                new SqlParameter("@HocKy", int.Parse(txtHocKy.Text)),
-                new SqlParameter("@MaKhoa", DatabaseConnection.CurrentKhoa)
-            };
-
-            DataTable dt = DatabaseConnection.ExecuteStoredProcedure("sp_LayDanhSachLopTinChi", parameters);
-            dgvLopTinChi.DataSource = dt;
-
-            if (dgvLopTinChi.Columns.Count > 0)
-            {
-                dgvLopTinChi.Columns["MALTC"].HeaderText = "Mã LTC";
-                dgvLopTinChi.Columns["MALTC"].Width = 70;
-                dgvLopTinChi.Columns["MAMH"].HeaderText = "Mã MH";
-                dgvLopTinChi.Columns["MAMH"].Width = 80;
-                dgvLopTinChi.Columns["TENMH"].HeaderText = "Tên môn học";
-                dgvLopTinChi.Columns["TENMH"].Width = 250;
-                dgvLopTinChi.Columns["NHOM"].HeaderText = "Nhóm";
-                dgvLopTinChi.Columns["NHOM"].Width = 60;
-                dgvLopTinChi.Columns["HOTENGV"].HeaderText = "Giảng viên";
-                dgvLopTinChi.Columns["HOTENGV"].Width = 180;
-                dgvLopTinChi.Columns["SOSVTOITHIEU"].HeaderText = "SV tối thiểu";
-                dgvLopTinChi.Columns["SOSVTOITHIEU"].Width = 100;
-                dgvLopTinChi.Columns["SOSV_DADANGKY"].HeaderText = "SV đã đăng ký";
-                dgvLopTinChi.Columns["SOSV_DADANGKY"].Width = 110;
-
-                dgvLopTinChi.Columns["NIENKHOA"].Visible = false;
-                dgvLopTinChi.Columns["HOCKY"].Visible = false;
-            }
-        }
-
-        private void btnDangKy_Click(object sender, EventArgs e)
-        {
-            if (string.IsNullOrWhiteSpace(txtMaSV.Text))
-            {
+        private void btnDangKy_Click(object sender, EventArgs e) {
+            if (string.IsNullOrWhiteSpace(txtMaSV.Text)) {
                 MessageBox.Show("Vui lòng nhập mã sinh viên!", "Thông báo");
                 return;
             }
 
-            if (dgvLopTinChi.CurrentRow == null)
-            {
+            if (dgvLopTinChi.CurrentRow == null) {
                 MessageBox.Show("Vui lòng chọn lớp tín chỉ cần đăng ký!", "Thông báo");
                 return;
             }
 
             int maLTC = Convert.ToInt32(dgvLopTinChi.CurrentRow.Cells["MALTC"].Value);
+            string maSV = txtMaSV.Text.Trim();
 
-            SqlParameter[] parameters = {
+            SqlParameter[] parameters =
+            {
                 new SqlParameter("@MALTC", maLTC),
-                new SqlParameter("@MASV", txtMaSV.Text.Trim())
+                new SqlParameter("@MASV", maSV)
             };
 
-            DataTable result = DatabaseConnection.ExecuteStoredProcedure("sp_DangKyLopTinChi", parameters);
+            string sql = @"
+                -- Kiểm tra lớp tín chỉ còn tồn tại và chưa bị hủy
+                IF NOT EXISTS (
+                    SELECT 1 
+                    FROM LOPTINCHI 
+                    WHERE MALTC = @MALTC AND HUYLOP = 0
+                )
+                BEGIN
+                    SELECT CAST(0 AS INT) AS Result, 
+                           N'Lớp tín chỉ không tồn tại hoặc đã bị hủy!' AS Message;
+                    RETURN;
+                END
 
-            if (result.Rows.Count > 0)
-            {
+                -- Đã đăng ký và chưa hủy
+                IF EXISTS (
+                    SELECT 1 
+                    FROM DANGKY 
+                    WHERE MALTC = @MALTC AND MASV = @MASV AND HUYDANGKY = 0
+                )
+                BEGIN
+                    SELECT CAST(0 AS INT) AS Result, 
+                           N'Sinh viên đã đăng ký lớp tín chỉ này rồi!' AS Message;
+                END
+                ELSE
+                BEGIN
+                    -- Từng đăng ký nhưng đã hủy -> mở lại
+                    IF EXISTS (
+                        SELECT 1 
+                        FROM DANGKY 
+                        WHERE MALTC = @MALTC AND MASV = @MASV AND HUYDANGKY = 1
+                    )
+                    BEGIN
+                        UPDATE DANGKY
+                        SET HUYDANGKY = 0
+                        WHERE MALTC = @MALTC AND MASV = @MASV;
+
+                        SELECT CAST(1 AS INT) AS Result, 
+                               N'Đăng ký lại lớp tín chỉ thành công!' AS Message;
+                    END
+                    ELSE
+                    BEGIN
+                        -- Chưa đăng ký lần nào -> thêm mới
+                        INSERT INTO DANGKY (MALTC, MASV, DIEM_CC, DIEM_GK, DIEM_CK, HUYDANGKY)
+                        VALUES (@MALTC, @MASV, 0, NULL, NULL, 0);
+
+                        SELECT CAST(1 AS INT) AS Result, 
+                               N'Đăng ký lớp tín chỉ thành công!' AS Message;
+                    END
+                END
+            ";
+
+            DataTable result = DatabaseConnection.ExecuteQuery(sql, parameters);
+
+            if (result.Rows.Count > 0) {
                 int resultCode = Convert.ToInt32(result.Rows[0]["Result"]);
                 string message = result.Rows[0]["Message"].ToString();
 
-                if (resultCode == 1)
-                {
-                    MessageBox.Show(message, "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    LoadLopTinChi();
-                }
-                else
-                {
-                    MessageBox.Show(message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                if (resultCode == 1) {
+                    MessageBox.Show(message, "Thành công",
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    LoadLopTinChi(); // refresh lại danh sách
+                } else {
+                    MessageBox.Show(message, "Lỗi",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }
 
-        private void btnThoat_Click(object sender, EventArgs e)
-        {
+
+        private void btnThoat_Click(object sender, EventArgs e) {
+            this.Hide();
+            frmMain mainForm = new frmMain();
+            mainForm.ShowDialog();
             this.Close();
         }
     }
