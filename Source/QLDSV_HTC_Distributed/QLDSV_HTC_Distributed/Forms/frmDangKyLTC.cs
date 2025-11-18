@@ -257,8 +257,6 @@ namespace QLDSV_HTC {
 
         private void LoadLopTinChi() {
             try {
-                string role = (DatabaseConnection.UserRole ?? "").Trim().ToUpperInvariant();
-
                 string query =
                     "SELECT " +
                     "    ltc.MALTC, " +
@@ -280,23 +278,27 @@ namespace QLDSV_HTC {
                     "    WHERE HUYDANGKY = 0 " +
                     "    GROUP BY MALTC " +
                     ") dk ON dk.MALTC = ltc.MALTC " +
-                    "WHERE {KHOA} AND ltc.HUYLOP = 0 " +
+                    "WHERE " +
+                    //"   {KHOA} " +
+                    //"   AND " +
+                    "   ltc.HUYLOP = 0 " +
                     "ORDER BY ltc.NIENKHOA DESC, ltc.HOCKY, mh.TENMH, ltc.NHOM;";
 
-                SqlParameter[] parameters = {
-                    new SqlParameter("@MaKhoa", DatabaseConnection.CurrentKhoa)
-                };
+                //SqlParameter[] parameters = {
+                //    new SqlParameter("@MaKhoa", DatabaseConnection.CurrentKhoa)
+                //};
+                //string role = (DatabaseConnection.UserRole ?? "").Trim().ToUpperInvariant();
+                //if (role == "PGV") {
+                //    // PGV xem tất cả khoa
+                //    query = query.Replace("{KHOA}", "1 = 1");
+                //    dtLopTinChi = DatabaseConnection.ExecuteQuery(query);
+                //} else {
+                //    // Cán bộ khoa chỉ xem theo khoa hiện tại
+                //    query = query.Replace("{KHOA}", "ltc.MAKHOA = @MaKhoa");
+                //    dtLopTinChi = DatabaseConnection.ExecuteQuery(query, parameters);
+                //}
 
-                if (role == "PGV") {
-                    // PGV xem tất cả khoa
-                    query = query.Replace("{KHOA}", "1 = 1");
-                    dtLopTinChi = DatabaseConnection.ExecuteQuery(query);
-                } else {
-                    // Cán bộ khoa chỉ xem theo khoa hiện tại
-                    query = query.Replace("{KHOA}", "ltc.MAKHOA = @MaKhoa");
-                    dtLopTinChi = DatabaseConnection.ExecuteQuery(query, parameters);
-                }
-
+                dtLopTinChi = DatabaseConnection.ExecuteQuery(query);
                 dgvLopTinChi.DataSource = dtLopTinChi;
 
                 if (dgvLopTinChi.Columns.Count > 0) {
