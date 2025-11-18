@@ -297,60 +297,73 @@ namespace QLDSV_HTC {
         private System.Windows.Forms.Label labelTitle;
 
         private void LoadComboBox() {
-            string role = (DatabaseConnection.UserRole ?? "").Trim().ToUpperInvariant();
-
             // Load lớp vào combobox
             string query = "SELECT " +
                                 "MALOP, TENLOP " +
                             "FROM LOP " +
-                            "WHERE {KHOA} " +
+                            //"WHERE {KHOA} " +
                             "ORDER BY MALOP";
-            SqlParameter[] parametersComboBox = {
-                new SqlParameter("@MaKhoa", DatabaseConnection.CurrentKhoa)
-            };
-            if (role == "PGV") {
-                // Xem tất cả các khoa
-                query = query.Replace("{KHOA}", "1=1");
-            } else {
-                // Xem theo khoa hiện tại
-                query = query.Replace("{KHOA}", "MAKHOA = @MaKhoa");
-            }
 
-            DataTable dt = DatabaseConnection.ExecuteQuery(query, parametersComboBox);
+            //string role = (DatabaseConnection.UserRole ?? "").Trim().ToUpperInvariant();
+            //SqlParameter[] parametersComboBox = {
+            //    new SqlParameter("@MaKhoa", DatabaseConnection.CurrentKhoa)
+            //};
+            //if (role == "PGV") {
+            //    // Xem tất cả các khoa
+            //    query = query.Replace("{KHOA}", "1=1");
+            //} else {
+            //    // Xem theo khoa hiện tại
+            //    query = query.Replace("{KHOA}", "MAKHOA = @MaKhoa");
+            //}
+
+            //DataTable dt = DatabaseConnection.ExecuteQuery(query, parametersComboBox);
+            DataTable dt = DatabaseConnection.ExecuteQuery(query);
             cboLop.DataSource = dt;
             cboLop.DisplayMember = "TENLOP";
             cboLop.ValueMember = "MALOP";
 
             // Load phái vào combobox
             cboPhai.Items.Clear();
-            cboPhai.Items.Add(new { Text = "Nam", Value = 1 });
-            cboPhai.Items.Add(new { Text = "Nữ", Value = 0 });
+            cboPhai.Items.Add(new { Text = "Nam", Value = 0 });
+            cboPhai.Items.Add(new { Text = "Nữ", Value = 1 });
             cboPhai.DisplayMember = "Text";
             cboPhai.ValueMember = "Value";
         }
 
         private void LoadData() {
-            string role = (DatabaseConnection.UserRole ?? "").Trim().ToUpperInvariant();
+            string query =
+                "SELECT " +
+                "   sv.MASV, " +
+                "   sv.HO, " +
+                "   sv.TEN, " +
+                "   sv.MALOP, " +
+                "   l.TENLOP, " +
+                "   l.MAKHOA, " +
+                "   sv.PHAI, " +
+                "   sv.NGAYSINH, " +
+                "   sv.DIACHI " +
+                "FROM SINHVIEN sv " +
+                    "JOIN LOP l ON sv.MALOP = l.MALOP " +
+                "WHERE " +
+                //"   {KHOA} " +
+                //"   AND " +
+                "   sv.DANGHIHOC = 0 " +
+                "ORDER BY sv.MASV";
 
-            string query = @"SELECT sv.MASV, sv.HO, sv.TEN, sv.MALOP, l.TENLOP, l.MAKHOA,
-                                  sv.PHAI, sv.NGAYSINH, sv.DIACHI
-                           FROM SINHVIEN sv
-                           JOIN LOP l ON sv.MALOP = l.MALOP
-                           WHERE {KHOA} AND sv.DANGHIHOC = 0
-                           ORDER BY sv.MASV";
+            //string role = (DatabaseConnection.UserRole ?? "").Trim().ToUpperInvariant();
+            //SqlParameter[] parameters = {
+            //    new SqlParameter("@MaKhoa", DatabaseConnection.CurrentKhoa)
+            //};
+            //if (role == "PGV") {
+            //    // Xem tất cả các khoa
+            //    query = query.Replace("{KHOA}", "1=1");
+            //} else {
+            //    // Xem theo khoa hiện tại
+            //    query = query.Replace("{KHOA}", "MAKHOA = @MaKhoa");
+            //}
+            //dtSinhVien = DatabaseConnection.ExecuteQuery(query, parameters);
 
-            SqlParameter[] parameters = {
-                new SqlParameter("@MaKhoa", DatabaseConnection.CurrentKhoa)
-            };
-            if (role == "PGV") {
-                // Xem tất cả các khoa
-                query = query.Replace("{KHOA}", "1=1");
-            } else {
-                // Xem theo khoa hiện tại
-                query = query.Replace("{KHOA}", "MAKHOA = @MaKhoa");
-            }
-
-            dtSinhVien = DatabaseConnection.ExecuteQuery(query, parameters);
+            dtSinhVien = DatabaseConnection.ExecuteQuery(query);
             dgvSinhVien.DataSource = dtSinhVien;
 
             if (dgvSinhVien.Columns.Count > 0) {
@@ -371,7 +384,7 @@ namespace QLDSV_HTC {
                     dtSinhVien.Columns.Add(
                         "GIOITINH",
                         typeof(string),
-                        "IIF(PHAI = 1, 'Nam', 'Nữ')"
+                        "IIF(PHAI = 0, 'Nam', 'Nữ')"
                     );
                 }
                 dgvSinhVien.Columns["GIOITINH"].HeaderText = "Giới tính";
