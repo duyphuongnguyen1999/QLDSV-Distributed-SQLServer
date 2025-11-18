@@ -195,6 +195,32 @@ namespace QLDSV_HTC {
         }
 
         /// <summary>
+        /// Thực thi câu lệnh trả về 1 giá trị (SELECT COUNT(*), MAX, MIN, ...).
+        /// Route theo maKhoa hoặc CurrentKhoa.
+        /// </summary>
+        public static object ExecuteScalar(string sql, SqlParameter[] parameters = null, string maKhoa = null) {
+            var cs = GetConnectionString(maKhoa);
+
+            try {
+                using (var conn = new SqlConnection(cs))
+                using (var cmd = new SqlCommand(sql, conn)) {
+                    cmd.CommandTimeout = CommandTimeoutSeconds;
+
+                    if (parameters != null)
+                        cmd.Parameters.AddRange(parameters);
+
+                    conn.Open();
+                    return cmd.ExecuteScalar();   // luôn trả về object (có thể null)
+                }
+            } catch (Exception ex) {
+                MessageBox.Show("Lỗi ExecuteScalar: " + ex.Message, "DB Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return null;
+            }
+        }
+
+
+        /// <summary>
         /// Kiểm tra sự tồn tại của 1 giá trị trong database
         /// </summary>
         public static bool CheckForExistence(string tableName, string columnName, string value, string maKhoa = null) {
