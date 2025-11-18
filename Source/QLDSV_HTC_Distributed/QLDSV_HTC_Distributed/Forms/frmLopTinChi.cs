@@ -443,46 +443,48 @@ namespace QLDSV_HTC {
         }
 
         private void LoadData() {
-            string role = (DatabaseConnection.UserRole ?? "").Trim().ToUpperInvariant();
+            //string role = (DatabaseConnection.UserRole ?? "").Trim().ToUpperInvariant();
 
             try {
-                string query = "SELECT " +
-                                    "ltc.MALTC, " +
-                                    "ltc.NIENKHOA, " +
-                                    "ltc.HOCKY, " +
-                                    "mh.MAMH, " +
-                                    "mh.TENMH, " +
-                                    "ltc.NHOM, " +
-                                    "gv.MAGV, " +
-                                    "gv.HO + ' ' + gv.TEN AS HOTENGV, " +
-                                    "k.MAKHOA, " +
-                                    "ltc.SOSVTOITHIEU, " +
-                                    "ltc.HUYLOP " +
-                               "FROM LOPTINCHI ltc " +
-                               "JOIN MONHOC mh ON ltc.MAMH = mh.MAMH " +
-                               "JOIN GIANGVIEN gv ON ltc.MAGV = gv.MAGV " +
-                               "JOIN KHOA k ON ltc.MAKHOA = k.MAKHOA " +
-                               "{WHERE} " +
-                               "ORDER BY ltc.NIENKHOA DESC, ltc.HOCKY, mh.TENMH, ltc.NHOM";
+                string query =
+                    "SELECT " +
+                    "   ltc.MALTC, " +
+                    "   ltc.NIENKHOA, " +
+                    "   ltc.HOCKY, " +
+                    "   mh.MAMH, " +
+                    "   mh.TENMH, " +
+                    "   ltc.NHOM, " +
+                    "   gv.MAGV, " +
+                    "   gv.HO + ' ' + gv.TEN AS HOTENGV, " +
+                    "   k.MAKHOA, " +
+                    "   ltc.SOSVTOITHIEU, " +
+                    "   ltc.HUYLOP " +
+                    "FROM LOPTINCHI ltc " +
+                    "   JOIN MONHOC mh ON ltc.MAMH = mh.MAMH " +
+                    "   JOIN GIANGVIEN gv ON ltc.MAGV = gv.MAGV " +
+                    "   JOIN KHOA k ON ltc.MAKHOA = k.MAKHOA " +
+                    //"{WHERE} " +
+                    "ORDER BY ltc.NIENKHOA DESC, ltc.HOCKY, mh.TENMH, ltc.NHOM";
 
                 object hocKyParam = string.IsNullOrWhiteSpace(txtHocKy.Text)
                     ? (object)DBNull.Value
                     : int.Parse(txtHocKy.Text.Trim());
 
-                SqlParameter[] parameters = {
-                    new SqlParameter("@MaKhoa", DatabaseConnection.CurrentKhoa)
-                };
+                //SqlParameter[] parameters = {
+                //    new SqlParameter("@MaKhoa", DatabaseConnection.CurrentKhoa)
+                //};
 
-                if (role == "PGV") {
-                    // Xem tất cả các khoa
-                    query = query.Replace("{WHERE}", "");
-                    dtLTC = DatabaseConnection.ExecuteQuery(query, parameters);
-                } else {
-                    // Xem theo khoa hiện tại
-                    query = query.Replace("{WHERE}", "WHERE ltc.MAKHOA = @MaKhoa");
-                    dtLTC = DatabaseConnection.ExecuteQuery(query, parameters);
-                }
+                //if (role == "PGV") {
+                //    // Xem tất cả các khoa
+                //    query = query.Replace("{WHERE}", "");
+                //    dtLTC = DatabaseConnection.ExecuteQuery(query, parameters);
+                //} else {
+                //    // Xem theo khoa hiện tại
+                //    query = query.Replace("{WHERE}", "WHERE ltc.MAKHOA = @MaKhoa");
+                //    dtLTC = DatabaseConnection.ExecuteQuery(query, parameters);
+                //}
 
+                dtLTC = DatabaseConnection.ExecuteQuery(query);
                 dgvLopTinChi.DataSource = dtLTC;
 
                 if (dgvLopTinChi.Columns.Count > 0) {
