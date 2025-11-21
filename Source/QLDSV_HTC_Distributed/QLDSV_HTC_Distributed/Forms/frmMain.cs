@@ -372,13 +372,25 @@ namespace QLDSV_HTC {
             EnableMenu("Hệ thống");
 
             if (role == "PGV" || role == "KHOA") {
-                EnableMenuSubItem(mnuNhapLieu, "Nhập lớp", "Nhập sinh viên", "Nhập môn học", "Mở lớp tín chỉ", "Đăng ký lớp tín chỉ", "Nhập điểm", "Đóng học phí");
+                EnableMenuSubItem(
+                    mnuNhapLieu,
+                    "Nhập lớp", "Nhập sinh viên", "Nhập môn học",
+                    "Mở lớp tín chỉ", "Đăng ký lớp tín chỉ", "Nhập điểm"
+                );
+                EnableMenuSubItem(
+                    mnuInAn,
+                    "DS lớp tín chỉ", "DS sinh viên đăng ký",
+                    "Bảng điểm môn học", "Phiếu điểm"
+                );
+
             }
             if (role == "SV") {
                 EnableMenuSubItem(mnuNhapLieu, "Đăng ký lớp tín chỉ");
+                EnableMenuSubItem(mnuInAn, "Phiếu điểm");
             }
             if (role == "PKT") {
                 EnableMenuSubItem(mnuNhapLieu, "Đóng học phí");
+                EnableMenuSubItem(mnuInAn, "DS đóng học phí");
             }
         }
 
