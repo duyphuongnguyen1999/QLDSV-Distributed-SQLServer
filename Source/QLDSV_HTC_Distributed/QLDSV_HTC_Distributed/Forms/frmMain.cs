@@ -168,30 +168,37 @@ namespace QLDSV_HTC {
             this.mnuDSLopTinChi.Name = "mnuDSLopTinChi";
             this.mnuDSLopTinChi.Size = new System.Drawing.Size(228, 26);
             this.mnuDSLopTinChi.Text = "DS lớp tín chỉ";
+            this.mnuDSLopTinChi.Click += new System.EventHandler(this.mnuDSLopTinChi_Click);
             // 
             // mnuDSSVDangKy
             // 
             this.mnuDSSVDangKy.Name = "mnuDSSVDangKy";
             this.mnuDSSVDangKy.Size = new System.Drawing.Size(228, 26);
             this.mnuDSSVDangKy.Text = "DS sinh viên đăng ký";
+            this.mnuDSSVDangKy.Click += new System.EventHandler(this.mnuDSSVDangKy_Click);
             // 
             // mnuBangDiem
             // 
             this.mnuBangDiem.Name = "mnuBangDiem";
             this.mnuBangDiem.Size = new System.Drawing.Size(228, 26);
             this.mnuBangDiem.Text = "Bảng điểm môn học";
+            this.mnuBangDiem.Click += new System.EventHandler(this.mnuBangDiem_Click);
+
             // 
             // mnuPhieuDiem
             // 
             this.mnuPhieuDiem.Name = "mnuPhieuDiem";
             this.mnuPhieuDiem.Size = new System.Drawing.Size(228, 26);
             this.mnuPhieuDiem.Text = "Phiếu điểm";
+            this.mnuPhieuDiem.Click += new System.EventHandler(this.mnuPhieuDiem_Click);
+
             // 
             // mnuDSHocPhi
             // 
             this.mnuDSHocPhi.Name = "mnuDSHocPhi";
             this.mnuDSHocPhi.Size = new System.Drawing.Size(228, 26);
             this.mnuDSHocPhi.Text = "DS đóng học phí";
+            this.mnuDSHocPhi.Click += new System.EventHandler(this.mnuDSHocPhi_Click);
             // 
             // lblWelcome
             // 
@@ -247,6 +254,8 @@ namespace QLDSV_HTC {
             this.PerformLayout();
 
         }
+
+
 
         private System.Windows.Forms.MenuStrip menuStrip1;
         private System.Windows.Forms.ToolStripMenuItem mnuHeThong;
@@ -347,7 +356,34 @@ namespace QLDSV_HTC {
 
         #region Config MenuStrip In ấn
 
+        private void mnuPhieuDiem_Click(object sender, EventArgs e) {
+            throw new NotImplementedException();
+        }
 
+        private void mnuDSHocPhi_Click(object sender, EventArgs e) {
+            throw new NotImplementedException();
+        }
+
+        private void mnuBangDiem_Click(object sender, EventArgs e) {
+            this.Hide();
+            frmInBangDiem frm = new frmInBangDiem();
+            frm.ShowDialog();
+            this.Close();
+        }
+
+        private void mnuDSSVDangKy_Click(object sender, EventArgs e) {
+            this.Hide();
+            frmInDSSVDangKy frm = new frmInDSSVDangKy();
+            frm.ShowDialog();
+            this.Close();
+        }
+
+        private void mnuDSLopTinChi_Click(object sender, EventArgs e) {
+            this.Hide();
+            frmInDanhSachLTC frm = new frmInDanhSachLTC();
+            frm.ShowDialog();
+            this.Close();
+        }
 
         #endregion // Config MenuStrip In ấn
 
