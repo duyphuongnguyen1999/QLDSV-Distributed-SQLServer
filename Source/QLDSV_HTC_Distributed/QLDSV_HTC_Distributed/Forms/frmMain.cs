@@ -357,11 +357,17 @@ namespace QLDSV_HTC {
         #region Config MenuStrip In ấn
 
         private void mnuPhieuDiem_Click(object sender, EventArgs e) {
-            throw new NotImplementedException();
+            this.Hide();
+            frmPhieuDiem frm = new frmPhieuDiem();
+            frm.ShowDialog();
+            this.Close();
         }
 
         private void mnuDSHocPhi_Click(object sender, EventArgs e) {
-            throw new NotImplementedException();
+            this.Hide();
+            frmInDSDongHocPhi frm = new frmInDSDongHocPhi();
+            frm.ShowDialog();
+            this.Close();
         }
 
         private void mnuBangDiem_Click(object sender, EventArgs e) {
